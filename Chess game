@@ -1,0 +1,78 @@
+# Chess game
+
+# Board is represented as a list of strings
+board = [
+    "RNBQKBNR",
+    "PPPPPPPP",
+    "********",
+    "********",
+    "********",
+    "********",
+    "pppppppp",
+    "rnbqkbnr"
+]
+
+# Function to print the board
+def print_board():
+    for row in board:
+        print(row)
+
+# Print the initial board
+print_board()
+
+# Make a move (e.g. "e4" -> move pawn at e2 to e4)
+def make_move(move):
+    # Split the move into start and end positions
+    start, end = move[:2], move[2:]
+    
+    # Find the start position
+    start_row, start_col = (8 - int(start[1])), ord(start[0]) - ord("a")
+    start_pos = board[start_row][start_col]
+    
+    # Find the end position
+    end_row, end_col = (8 - int(end[1])), ord(end[0]) - ord("a")
+    end_pos = board[end_row][end_col]
+    
+    # Check if the start position is empty
+    if start_pos == "*":
+        print("Illegal move: starting position is empty")
+        return
+    
+    # Check if the move is legal for the piece
+    if not is_legal_move(start_pos, start, end):
+        print("Illegal move: move is not legal for the piece")
+        return
+    
+    # Check if the end position is occupied by the same color
+    if start_pos.lower() == end_pos.lower():
+        print("Illegal move: end position is occupied by the same color")
+        return
+    
+    # Update the board
+    board[end_row] = board[end_row][:end_col] + start_pos + board[end_row][end_col+1:]
+    board[start_row] = board[start_row][:start_col] + "*" + board[start_row][start_col+1:]
+    
+# Function to check if a move is legal for a piece
+def is_legal_move(piece, start, end):
+    # Implement move rules for each piece
+    if piece == "P":
+        return is_legal_pawn_move(start, end)
+    elif piece == "R":
+        return is_legal_rook_move(start, end)
+    elif piece == "N":
+        return is_legal_knight_move(start, end)
+    elif piece == "B":
+        return is_legal_bishop_move(start, end)
+    elif piece == "Q":
+        return is_legal_queen_move(start, end)
+    elif piece == "K":
+        return is_legal_king_move(start, end)
+    else:
+        return False
+
+# Function to check if a pawn move is legal
+def is_legal_pawn_move(start, end):
+    # Implement pawn move rules here
+    pass
+
+# Function to check if a
