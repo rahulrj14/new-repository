@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <title>Instagram Clone</title>
+</head>
+<body>
+  <header>
+    <div class="logo">Instagram</div>
+    <form>
+      <input type="text" placeholder="Search">
+    </form>
+    <nav>
+      <ul>
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Discover</a></li>
+        <li><a href="#">Activity</a></li>
+        <li><a href="#">Profile</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <div class="post-container">
+      <!-- Post content goes here -->
+    </div>
+  </main>
+  <footer>
+    <!-- Footer content goes here -->
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+#CSS code
+
+/* CSS for styling goes here */
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 1rem;
+}
+
+header .logo {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+header form {
+  display: flex;
+}
+
+header form input[type="text"] {
+  border: none;
+  outline: none;
+  background-color: #f5f5f5;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+}
+
+header nav ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+header nav ul li a {
+  display: block;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  color: #222222;
+}
+
+header nav ul li a:hover {
+  background-color: #f5f5f5;
+}
+
+main {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.post-container {
+  /* Post styling goes here */
+}
+
+footer {
+  /* Footer styling goes here */
+}
+
+
+
+
+#JS code
+
+// JavaScript for adding functionality goes here
+
+const searchInput = document.querySelector('header form input[type="text"]');
+
+searchInput.addEventListener('focus', () => {
+  searchInput.placeholder = '';
+});
+
+searchInput.addEventListener('blur', () => {
+  searchInput.placeholder = 'Search';
+});
