@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -71,10 +72,12 @@ class _LabScreenState extends State<LabScreen> {
   double? _batteryNow;
 
   bool get _running => _tracker != null;
+  bool get _isAndroid => _info['platform'] == 'android';
 
   @override
   void initState() {
     super.initState();
+    _mode = defaultTargetPlatform == TargetPlatform.android ? LabMode.lock : LabMode.faceDown;
     _sub = _signals.events.listen(_onRaw, onError: (Object e) => _add('channel error: $e'));
     _refreshInfo();
   }
@@ -135,6 +138,7 @@ class _LabScreenState extends State<LabScreen> {
     await _refreshInfo();
     final faceDown = _mode == LabMode.faceDown;
     final ok = await _signals.setFaceDownMode(faceDown);
+    await _signals.startSession();
     if (faceDown && !ok) {
       _add('⚠️ This device has no proximity sensor; face-down mode cannot work here.',
           important: true);
@@ -176,7 +180,11 @@ class _LabScreenState extends State<LabScreen> {
       if (gap > heartbeatEvery * 1.6) {
         _gaps++;
         if (gap > _longestGap) _longestGap = gap;
-        _add('😴 app was asleep for ${gap.inSeconds}s', at: last);
+        _add(
+            _isAndroid
+                ? '😴 CPU slept ${gap.inSeconds}s (normal when locked; unlocks still wake it)'
+                : '😴 app was asleep for ${gap.inSeconds}s',
+            at: last);
       }
     }
     _lastBeat = now;
@@ -188,6 +196,7 @@ class _LabScreenState extends State<LabScreen> {
     _heartbeat?.cancel();
     _ui?.cancel();
     await _signals.setFaceDownMode(false);
+    await _signals.stopSession();
     await _refreshInfo();
     _add('■ stopped', important: true);
     setState(() => _tracker = null);
@@ -203,6 +212,7 @@ class _LabScreenState extends State<LabScreen> {
     return [
       'Lock In Lab — ${_mode == LabMode.faceDown ? 'face-down' : 'lock'} mode',
       'device: ${_info['model'] ?? '?'} ${_info['system'] ?? ''}',
+      if (_isAndroid) 'battery optimisation on: ${_info['batteryOptimized'] ?? '?'}',
       'passcode set: ${_info['passcodeSet'] ?? '?'}  proximity sensor: ${_info['proximitySupported'] ?? '?'}',
       if (start != null) 'duration: ${_fmt(DateTime.now().difference(start))}',
       'cracks: ${t?.crackCount ?? '-'}  grace saves: $_graceCancels',
@@ -259,14 +269,27 @@ class _LabScreenState extends State<LabScreen> {
                   _mode == LabMode.faceDown
                       ? 'Keep Lock In open and put the phone face down. The screen goes dark. '
                           'Picking it up for more than 10 s is a crack.'
-                      : 'Lock the phone with the side button. Unlocking counts as a crack. '
-                          'On iPhone this is only noticed when you come back to the app.',
+                      : _isAndroid
+                          ? 'Lock the phone with the power button. Unlocking it for more than '
+                              '10 s is a crack, even if you open a different app.'
+                          : 'Lock the phone with the side button. Unlocking counts as a crack. '
+                              'On iPhone this is only noticed when you come back to the app.',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 8),
                 if (_info['passcodeSet'] == false)
-                  const Text('⚠️ No passcode set: lock detection will not work.',
-                      style: TextStyle(color: Colors.orangeAccent)),
+                  Text(
+                      _isAndroid
+                          ? '⚠️ No screen lock set: turning the screen on will count as unlocking.'
+                          : '⚠️ No passcode set: lock detection will not work.',
+                      style: const TextStyle(color: Colors.orangeAccent)),
+                if (_info['batteryOptimized'] == true)
+                  TextButton(
+                    onPressed: _signals.openBatterySettings,
+                    child: const Text(
+                        '⚠️ Battery optimisation is on for this app. Some phones kill '
+                        'background apps. Tap to open settings, find "Lock In Lab", choose "Don\'t optimise".'),
+                  ),
               ],
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),

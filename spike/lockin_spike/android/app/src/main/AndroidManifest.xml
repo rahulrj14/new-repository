@@ -1,6 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Keeps the lab running while the phone is locked (user-started only). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Shows the persistent "Locked in" notification (Android 13+ asks). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Face-down mode: lets the proximity sensor switch the screen off. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- No INTERNET permission: this app cannot reach the network at all. -->
     <application
-        android:label="lockin_spike"
+        android:label="Lock In Lab"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -25,6 +33,14 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <service
+            android:name=".LockInService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps a focus session the user started running while the phone is locked, to notice when the phone is unlocked." />
+        </service>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

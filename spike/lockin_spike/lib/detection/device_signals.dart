@@ -47,6 +47,20 @@ class DeviceSignals {
     }
   }
 
+  /// Android: starts the foreground service ("Locked in" notification) that
+  /// keeps detection running while the phone is locked. iOS: no-op.
+  Future<void> startSession() => _call('startSession');
+  Future<void> stopSession() => _call('stopSession');
+  Future<void> openBatterySettings() => _call('openBatterySettings');
+
+  Future<void> _call(String method) async {
+    try {
+      await _methods.invokeMethod<void>(method);
+    } on MissingPluginException {
+      // Not needed on this platform.
+    }
+  }
+
   Future<Map<String, Object?>> snapshot() async =>
       Map<String, Object?>.from(await _methods.invokeMethod<Map>('snapshot') ?? {});
 }

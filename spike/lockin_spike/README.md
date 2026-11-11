@@ -1,67 +1,60 @@
 # Lock In Lab (spike, part 1: detection)
 
-A throwaway test app that answers one question on a real iPhone: **can we reliably tell when someone picks up their phone?** It runs on a single phone. It has no Bluetooth yet, no storage, no network access and no dependencies beyond Flutter.
+A throwaway test app that answers one question on a real phone: **can we reliably tell when someone uses their phone during a session?** It runs on a single phone. It has no Bluetooth yet and no storage, and release builds have **no internet permission**, so the app cannot send anything anywhere.
 
-## What you need
+## Android (primary)
 
-- **A Mac** with Xcode 26 or later (free from the Mac App Store). iPhone apps can only be built on a Mac.
-- **Flutter** 3.50 or later on that Mac: <https://docs.flutter.dev/get-started/install/macos>.
-- **Your iPhone** (iOS 16.1 or later) and its cable.
-- **An Apple ID.** A free one is enough for this lab. Apps installed with a free Apple ID stop opening after 7 days; just run again to reinstall.
+### Install the test build
 
-## One-time setup
+1. On the Android phone, download `lock-in-lab.apk` (Claude sends it in the chat).
+2. Open it. Android asks to allow installs from that app (your browser, Files or the Claude app). Allow it, then tap **Install**.
+   - Play Protect may warn that the app is from an unknown developer. That's expected for a test build. Choose **Install anyway**.
+3. Open **Lock In Lab**. When you tap Start the first time, allow notifications. That shows the "Locked in" notification which keeps the session alive while the phone is locked.
+4. If the app shows a ⚠️ battery optimisation warning, tap it and set **Lock In Lab → Don't optimise / Unrestricted**. Samsung, Xiaomi, OnePlus and Oppo phones are known to kill background apps otherwise.
 
-1. On the iPhone, open **Settings → Privacy & Security → Developer Mode** and turn it on. The phone restarts.
-2. Make sure the iPhone has a **passcode**. Lock detection needs one.
-3. On the Mac:
-   ```sh
-   git clone https://github.com/rahulrj14/new-repository.git
-   cd new-repository
-   git checkout claude/lock-in-mobile-app-pz6833
-   cd spike/lockin_spike
-   flutter pub get
-   open ios/Runner.xcworkspace
-   ```
-4. In Xcode:
-   1. Select **Runner** in the left sidebar, then **Signing & Capabilities**.
-   2. Under **Team**, pick your Apple ID (add it with *Add Account…* if needed).
-   3. If Xcode complains about the bundle identifier, change it to something unique, for example `app.lockin.lab.yourname`.
+To install a newer build later, just install the new APK over the old one.
 
-## Run it on the iPhone
-
-Plug in the iPhone, unlock it, then on the Mac:
+### Build it yourself (optional)
 
 ```sh
-flutter run --release
+cd spike/lockin_spike
+flutter build apk --release      # build/app/outputs/flutter-apk/app-release.apk
+flutter install                  # with the phone plugged in and USB debugging on
 ```
 
-Use `--release` because debug builds behave differently when the phone is locked. On first install, iOS may say "Untrusted Developer". If it does, go to **Settings → General → VPN & Device Management**, tap your Apple ID and choose **Trust**.
+### Tests (Android, about 45 minutes in total)
 
-## What to test (about 15 minutes)
-
-Do each test, then tap **Copy log** and paste the log into the Claude chat.
+Do each test, tap **Copy log**, and paste the log into the Claude chat. The phone needs a screen lock (PIN, pattern or fingerprint).
 
 | # | Mode | Steps | Expected |
 |---|---|---|---|
-| 1 | Face-down | Tap Start. Within 15 s, put the phone face down on a table. Leave it for 2 minutes. Lift it and look. | Screen went dark while face down. **0 cracks. 0 sleep gaps.** |
-| 2 | Face-down | Start, put it face down. After the "armed" message, lift it for about 5 s, then put it back down. | "grace started", then "back down after 5s — no crack". |
-| 3 | Face-down | Start, put it face down. Lift it and keep holding it for 15 s. | 💥 CRACK about 10 s after lifting, plus a strong haptic. |
-| 4 | Face-down | Start, put it face down. Lift it, go to the Home Screen and open another app for 20 s, then come back. | 💥 CRACK about 10 s after leaving, ideally **not** marked "noticed late". |
-| 5 | Face-down | Start, put it face down. Lift it and press the side button to lock it. Wait 1 minute, then unlock and return. | **No crack from locking.** A crack about 10 s after you unlocked, probably "noticed late". |
-| 6 | Lock | Start, press the side button within 15 s. Wait 2 minutes, unlock, and return to the app. | Expect a "😴 app was asleep" gap. Note whether "deviceUnlocked" appears and how late it was delivered. |
-| 7 | Face-down | Start, put it face down, and leave it for **30 minutes**. | 0 cracks, 0 sleep gaps. **Note the battery drain.** |
+| A1 | Lock | Tap Start. Within 15 s, press the power button. Wait 2 minutes. Unlock and look at the app. | `deviceLocked` at the time you locked. `deviceUnlocked` at the time you unlocked (no "delivered late" note). 💥 CRACK 10 s after unlocking, because an unlocked phone is a phone in use. |
+| A2 | Lock | Start, lock it. After 1 minute, unlock and open **another app** (for example Instagram) for 20 s. Come back. | 💥 CRACK about 10 s after unlocking, **not** "noticed late". This is the key one: detection works even when you're in another app. |
+| A3 | Lock | Start, lock it. Unlock, then lock again within 5 s. | "grace started", then "back down after ~5s — no crack". |
+| A4 | Lock | Start, lock it. A notification arrives and lights the screen (ask someone to message you). Don't touch the phone. | `screenOnLocked` and **no crack**. |
+| A5 | Face-down | Start, put the phone face down within 15 s. Lift it for 5 s, put it back. Then lift and hold it for 15 s. | Screen goes dark face down. The first lift is saved by the grace window, the second cracks. |
+| A6 | Lock | Start, lock it, and leave it for **30 minutes**. Then unlock and come back quickly. | `serviceStarted`, no `serviceStopped`, **0 cracks**, and the unlock is detected. Sleep gaps are normal on Android (deep sleep) and harmless. Note the battery drain. |
 
-**Test 7 is the most important.** It shows whether face-down mode keeps the app alive and what it costs in battery.
+**A2 and A6 matter most.** A2 shows detection works while in other apps. A6 shows the service survives 30 minutes locked on your phone's brand.
 
-## What each result tells us
+## iPhone (paused)
 
-- **Tests 1–3:** whether face-down mode works at all. The screen turning off over the proximity sensor while the app stays alive is the core trick.
-- **Test 4:** whether iOS gives us enough background time to judge the 10 s grace window in real time. If it does, cracks reach friends immediately once Bluetooth is added.
-- **Tests 5–6:** how blind iOS is once the phone is properly locked. Expect it to be blind; this is the known limitation.
-- **Test 7:** battery drain and reliability over a real session length.
+Building for iPhone needs a Mac with Xcode. The iOS native code is in `ios/Runner/DeviceUseMonitor.swift` but **has not been compiled yet**. To try it on a Mac:
+
+```sh
+cd spike/lockin_spike
+flutter pub get
+open ios/Runner.xcworkspace
+```
+
+Then:
+1. In Xcode, set your Team under **Signing & Capabilities**.
+2. On the iPhone, turn on **Settings → Privacy & Security → Developer Mode**.
+3. Run `flutter run --release`.
 
 ## Known limitations of this part
 
-- **Android:** the native layer isn't written yet, so the app runs but shows no events. Android unlock detection (`ACTION_USER_PRESENT`) is well understood and comes with the Bluetooth part.
-- **Incoming calls:** an incoming call takes the app out of the foreground and will count as a crack after 10 s. We'll decide later whether calls should be exempt.
-- **Nothing is saved.** If the app is closed, the log is gone, so copy it first.
+- **Incoming calls** take the app out of the foreground. In face-down mode, a call counts as a crack after 10 s. We'll decide later whether calls should be exempt.
+- **Swiping Lock In Lab away from Recents** stops the log. The notification may remain until you tap Stop or reopen the app.
+- **Nothing is saved.** Copy the log before closing the app.
+- **The build is signed with a debug key.** That's fine for testing, but not for the Play Store. Release signing comes with the beta builds step.
