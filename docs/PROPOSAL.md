@@ -293,11 +293,40 @@ I'll report the results as they come, including failures, before building step 2
 
 ---
 
-## 7. Decisions I need from you
+## 7. Decisions (resolved 2026-11-11)
 
-1. **BLE stack:** keep flutter_blue_plus for the central role (your spec), or do both roles natively behind one Pigeon interface? I lean native-both. It puts iOS state restoration and Android connection quirks in one place, and it avoids the licence question. The cost is about 2 extra days of work.
-2. **Protocol additions** in §2.4: approve?
-3. **Handover tiebreak** "prefer Android" in §2.6: approve?
-4. **iOS default mode:** face-down mode as the iOS default, pending the spike results?
-5. **Screen Time:** do you want me to prepare the Family Controls entitlement request text so you can submit it from your Apple Developer account early, given the wait?
-6. **Minimum OS:** I propose iOS 16.1 (for Live Activities and `.individual` Screen Time auth) and Android 8.0 / API 26.
+The owner asked for "what is right and what is safe". These choices override anything earlier in this document that conflicts with them.
+
+1. **BLE stack: native for both roles.** Swift CoreBluetooth and Kotlin, behind one Pigeon interface. `flutter_blue_plus` is not used, which also sidesteps its licence change.
+2. **Protocol additions (§2.4): approved.**
+3. **Handover: prefer the earliest-joined Android member, then the earliest joiner.**
+4. **iOS default: face-down mode**, pending the spike. "Lock your phone" mode is offered when an Android phone is in the session.
+5. **Screen Time:** a draft of the entitlement request is in `docs/screen-time-entitlement-request.md`. The owner submits it from their Apple Developer account. It stays optional and off by default.
+6. **Minimum OS: iOS 16.1, Android 8.0 (API 26).**
+7. **Join by QR code, sync by encrypted Bluetooth, with Offline mode as a fallback.** See §8.
+
+## 8. QR join and encryption (replaces §2.2)
+
+**Join flow.**
+- The host's lobby shows a QR code containing `lockin:1:<sessionId b32>:<sessionKey b64url, 128-bit>:<hostAvatarId>:<hostNicknameId>`.
+- The joiner scans it in Lock In's own scanner. The joiner's phone then looks for the session over Bluetooth and connects.
+- The host still taps to approve each joiner. A photo of the QR code alone is not enough to join.
+
+**Advertising.** Hosts no longer advertise anything human-readable. They advertise only a **per-session service UUID** derived from `HKDF(sessionKey, "lockin-adv")`, so nearby phones can't tell it's a Lock In session or whose it is. iPhones can also scan in the background for that specific UUID, which helps host handover between iPhones.
+
+**Encryption.**
+- Every frame after byte 0 is encrypted with AES-GCM under a key derived from `sessionKey`.
+- The nonce is `memberIndex ‖ seq ‖ direction`, so a nonce is never reused within a session.
+- The 16-byte tag pushes frames past 20 bytes, so the BLE MTU is raised to ≥ 64. iOS negotiates this automatically; Android calls `requestMtu(185)`.
+- Frames that fail authentication are dropped silently.
+- Crypto uses the platform's built-in libraries (CryptoKit, `javax.crypto`) through the native layer, with no extra Dart packages.
+
+**Scanner.**
+- iOS uses AVFoundation (`AVCaptureMetadataOutput`), which runs on the device.
+- Android must **not** use Google ML Kit (the default in `mobile_scanner`), because its docs say it sends usage metrics to Google. Android uses an offline ZXing-based decoder instead.
+- The camera runs only while the scan sheet is open. No images are kept.
+
+**Offline mode (no Bluetooth).**
+- Joining by QR code still works, and each phone tracks only itself.
+- At the end, each joiner shows a results QR code (`memberIndex, lockedSeconds, crackCount`, MAC'd with the session key). The host scans these to build the group results and share card.
+- There are no live cracks on other people's screens in this mode.
