@@ -6,18 +6,27 @@ The app has no backend, no account, no analytics, and **no internet permission**
 
 ## What's in this build
 
-- **Onboarding:** pick a blob (8 original characters), get a random nickname from a fixed word list (reroll 🎲), done.
-- **Home:** your blob, aura, level, and a session length (25m, 50m, 90m or ∞).
-- **Session:**
-  - A 10 s settle period, then detection is live.
-  - Unlocking starts a 10 s grace window. Lock again in time and nothing happens; otherwise 💥 crack, with haptics.
-  - Lock the phone again to keep earning.
-  - The notification shows a live countdown on the lock screen.
-- **Results:** aura earned, locked minutes, cracks, clean-finish bonus, and level progress.
-- **Rules** (in `lib/progression/aura.dart`): 1 aura per locked minute, −5 per crack, +10 for a clean full session of 25 minutes or more, and a daily cap of 300.
-- **Settings:** change your blob, haptics, reduce motion, and "keep sessions alive" (opens the app's system settings so battery saver can be set to *No restrictions*).
+**Look:** light, bright, chat-app feel. Blue headers, white cards, sticker-style blobs with speech bubbles, and Fredoka type. Hike was the inspiration, but the palette, characters and art are all original.
 
-Not yet in this build: Bluetooth group sessions, streaks and freezes, skins, share cards, iOS.
+- **Onboarding:** pick a blob (8 original characters), get a random nickname from a fixed word list (🎲 reroll), done.
+- **Tabs:**
+  - **Home:** your blob talking to you, level, streak card with this week, session length, and **Lock in**.
+  - **Streak:** day count, best streak, freezes, a 4-week calendar, and how it works.
+  - **Me:** stats, skins (equip / locked with requirement), change blob, history, settings, and a privacy note.
+- **Session:**
+  - The screen is blue while you're locked in and turns coral when you unlock. Your blob reacts in a speech bubble.
+  - 10 s grace window, then 💥 crack with haptics.
+  - Live countdown in the lock-screen notification.
+- **Results:** aura, minutes, cracks, clean bonus, streak update (including freezes used or earned), new skins (wear in one tap), level progress, and **share**.
+- **Share card:** 1080×1920 story image rendered on the phone, shared through the system share sheet. Nothing is uploaded by the app.
+- **Rules:**
+  - **Aura:** 1 per locked minute, −5 per crack, +10 for a clean full session of 25 minutes or more, daily cap 300.
+  - **Streak:** a day counts once you've locked in 25 minutes. Sessions add up, and there's a 1-minute allowance for the start-up seconds.
+  - **Freezes:** earn one every 7 streak days (hold 2). One is used automatically if you miss a day.
+  - **Skins:** 9, unlocked by level, streak or sessions. Nothing to buy.
+- **Storage:** SQLite (drift) for sessions, daily activity, streak and skins. Profile IDs and settings live in shared preferences. Aura from the first test build is carried over.
+
+Not yet in this build: Bluetooth group sessions, purchases, Live Activity, iOS.
 
 ## Install the test build
 
@@ -41,7 +50,9 @@ These let you see every state on one phone without waiting. Store builds leave t
 ## Build
 
 ```sh
+dart run build_runner build        # after changing lib/storage/db.dart
 flutter test
+flutter test test_visual --update-goldens   # renders every screen to test_visual/goldens/ for review
 flutter build apk --release --dart-define=LOCKIN_DEBUG_TOOLS=true   # test build
 flutter build apk --release                                          # no test tools
 ```
@@ -53,9 +64,9 @@ lib/
   catalog/      avatars (painted in code), nickname word lists
   detection/    GraceTracker: pure crack/grace state machine
   session/      SessionEngine (pure time accounting) + Riverpod controller
-  progression/  aura rules, levels
-  storage/      profile + settings (shared_preferences; moves to drift with streaks)
+  progression/  aura, levels, streaks + freezes (pure)
+  storage/      drift database, ProgressRepo, profile + settings
   platform/     channel to the Android service
-  ui/           theme, onboarding, home, session, results
+  ui/           theme, shell (tabs), home, streak, me, onboarding, session, results, share
 android/…/      LockInService (foreground service + unlock receiver), MainActivity
 ```

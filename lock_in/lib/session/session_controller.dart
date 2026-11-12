@@ -7,6 +7,7 @@ import '../detection/grace_tracker.dart';
 import '../platform/device_bridge.dart';
 import '../progression/aura.dart';
 import '../storage/profile_store.dart';
+import '../storage/progress_repo.dart';
 import 'session_engine.dart';
 
 /// A snapshot of the running session for the UI. A new object every tick.
@@ -39,6 +40,8 @@ class SessionResult {
     required this.plannedLength,
     required this.levelBefore,
     required this.auraTotalAfter,
+    required this.outcome,
+    required this.endedAt,
   });
   final AuraBreakdown aura;
   final int cracks;
@@ -46,6 +49,8 @@ class SessionResult {
   final Duration? plannedLength;
   final Level levelBefore;
   final int auraTotalAfter;
+  final SessionOutcome outcome;
+  final DateTime endedAt;
 
   bool get leveledUp => levelFor(auraTotalAfter).number > levelBefore.number;
 }
@@ -133,27 +138,39 @@ class SessionController extends Notifier<ActiveSession?> {
     if (engine == null) return;
     final now = _clock.now();
     _teardown();
-    final profiles = ref.read(profileProvider.notifier);
-    final before = ref.read(profileProvider);
+    final repo = ref.read(repoProvider);
+    final before = await repo.load(now);
+    final locked = engine.lockedTime(now);
+    final completed = engine.isComplete(now);
     final aura = scoreSession(
-      locked: engine.lockedTime(now),
+      locked: locked,
       cracks: engine.cracks,
-      completedPlannedLength: engine.isComplete(now),
+      completedPlannedLength: completed,
       plannedLength: engine.plannedLength,
-      earnedTodaySoFar: profiles.earnedToday(now),
+      earnedTodaySoFar: before.auraToday,
     );
-    await profiles.addSession(aura: aura.total, at: now);
+    final outcome = await repo.recordSession(
+      startedAt: engine.startedAt,
+      endedAt: now,
+      plannedMinutes: engine.plannedLength?.inMinutes,
+      lockedSeconds: locked.inSeconds,
+      cracks: engine.cracks,
+      completed: completed,
+      aura: aura.total,
+    );
+    await ref.read(progressProvider.notifier).refresh();
     ref.read(lastResultProvider.notifier).set(SessionResult(
           aura: aura,
           cracks: engine.cracks,
-          completed: engine.isComplete(now),
+          completed: completed,
           plannedLength: engine.plannedLength,
-          levelBefore: levelFor(before?.auraTotal ?? 0),
-          auraTotalAfter: ref.read(profileProvider)?.auraTotal ?? aura.total,
+          levelBefore: before.level,
+          auraTotalAfter: before.auraTotal + aura.total,
+          outcome: outcome,
+          endedAt: now,
         ));
     state = null;
     await ref.read(prefsProvider).remove(activeSessionKey);
-    final completed = engine.isComplete(now);
     await _bridge.stopSession(
       doneTitle: completed ? 'Session done ✦ +${aura.total} aura' : null,
       doneText: engine.cracks == 0 ? 'Clean run. No cracks.' : 'Cracked ${engine.cracks}×. Next one\'s cleaner.',

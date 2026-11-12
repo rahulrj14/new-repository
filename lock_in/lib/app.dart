@@ -4,10 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'storage/profile_store.dart';
-import 'ui/home/home_screen.dart';
+import 'ui/home/home_tab.dart';
+import 'ui/me/me_tab.dart';
 import 'ui/onboarding/onboarding_screen.dart';
 import 'ui/results/results_screen.dart';
 import 'ui/session/session_screen.dart';
+import 'ui/share/share_screen.dart';
+import 'ui/shell.dart';
+import 'ui/streak/streak_tab.dart';
 import 'ui/theme/theme.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -21,10 +25,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/', builder: (_, _) => const HomeScreen()),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, shell) => AppShell(shell: shell),
+        branches: [
+          StatefulShellBranch(routes: [GoRoute(path: '/', builder: (_, _) => const HomeTab())]),
+          StatefulShellBranch(routes: [GoRoute(path: '/streak', builder: (_, _) => const StreakTab())]),
+          StatefulShellBranch(routes: [GoRoute(path: '/me', builder: (_, _) => const MeTab())]),
+        ],
+      ),
       GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
       GoRoute(path: '/session', builder: (_, _) => const SessionScreen()),
       GoRoute(path: '/results', builder: (_, _) => const ResultsScreen()),
+      GoRoute(path: '/share', builder: (_, _) => const ShareScreen()),
     ],
   );
 });
@@ -35,21 +47,26 @@ class LockInApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reduceMotion = ref.watch(settingsProvider.select((s) => s.reduceMotion));
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
-    return MaterialApp.router(
-      title: 'Lock In',
-      debugShowCheckedModeBanner: false,
-      theme: buildTheme(),
-      themeMode: ThemeMode.dark,
-      routerConfig: ref.watch(routerProvider),
-      builder: (context, child) {
-        final mq = MediaQuery.of(context);
-        // Honour the system setting OR the in-app toggle.
-        return MediaQuery(
-          data: mq.copyWith(disableAnimations: mq.disableAnimations || reduceMotion),
-          child: child!,
-        );
-      },
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: MaterialApp.router(
+        title: 'Lock In',
+        debugShowCheckedModeBanner: false,
+        theme: buildTheme(),
+        themeMode: ThemeMode.light,
+        routerConfig: ref.watch(routerProvider),
+        builder: (context, child) {
+          final mq = MediaQuery.of(context);
+          // Honour the system setting OR the in-app toggle.
+          return MediaQuery(
+            data: mq.copyWith(disableAnimations: mq.disableAnimations || reduceMotion),
+            child: child!,
+          );
+        },
+      ),
     );
   }
 }

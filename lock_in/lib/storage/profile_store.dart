@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../progression/aura.dart';
+import 'db.dart';
+import 'progress_repo.dart';
 
 /// Set while a session runs; still present at launch = the app was killed.
 const activeSessionKey = 'activeSessionStart';
@@ -9,83 +10,70 @@ const activeSessionKey = 'activeSessionStart';
 /// True if the previous session was cut off by the system.
 final interruptedAtLaunchProvider = Provider<bool>((ref) => false);
 
-/// Overridden in main() with the loaded instance.
+/// Overridden in main() with the loaded instances.
 final prefsProvider = Provider<SharedPreferences>((ref) => throw UnimplementedError());
+final dbProvider = Provider<AppDatabase>((ref) => throw UnimplementedError());
+final repoProvider = Provider<ProgressRepo>((ref) => ProgressRepo(ref.watch(dbProvider)));
 
-/// Everything about "me", on this phone only. Catalog IDs and numbers,
-/// never free text. (Moves to drift/SQLite with streaks and skins.)
+/// Who I am: catalog IDs only, never free text. Small, so it lives in prefs.
 class Profile {
-  const Profile({
-    required this.avatarId,
-    required this.nicknameId,
-    required this.auraTotal,
-    required this.auraToday,
-    required this.sessions,
-  });
-
+  const Profile({required this.avatarId, required this.nicknameId, required this.skinId});
   final int avatarId;
   final int nicknameId;
-  final int auraTotal;
-  final int auraToday;
-  final int sessions;
-
-  Level get level => levelFor(auraTotal);
+  final int skinId;
 }
 
 class ProfileNotifier extends Notifier<Profile?> {
-  static const _avatar = 'avatarId';
-  static const _nickname = 'nicknameId';
-  static const _total = 'auraTotal';
-  static const _day = 'auraDay';
-  static const _today = 'auraToday';
-  static const _sessions = 'sessions';
-
   SharedPreferences get _p => ref.read(prefsProvider);
 
-  static String _dayKey(DateTime t) => '${t.year}-${t.month}-${t.day}';
-
   @override
-  Profile? build() => _load(DateTime.now());
-
-  Profile? _load(DateTime now) {
-    final avatar = _p.getInt(_avatar);
-    final nick = _p.getInt(_nickname);
+  Profile? build() {
+    final avatar = _p.getInt('avatarId');
+    final nick = _p.getInt('nicknameId');
     if (avatar == null || nick == null) return null;
-    final sameDay = _p.getString(_day) == _dayKey(now);
-    return Profile(
-      avatarId: avatar,
-      nicknameId: nick,
-      auraTotal: _p.getInt(_total) ?? 0,
-      auraToday: sameDay ? (_p.getInt(_today) ?? 0) : 0,
-      sessions: _p.getInt(_sessions) ?? 0,
-    );
+    return Profile(avatarId: avatar, nicknameId: nick, skinId: _p.getInt('skinId') ?? 0);
   }
 
   Future<void> create({required int avatarId, required int nicknameId}) async {
-    await _p.setInt(_avatar, avatarId);
-    await _p.setInt(_nickname, nicknameId);
-    state = _load(DateTime.now());
+    await _p.setInt('avatarId', avatarId);
+    await _p.setInt('nicknameId', nicknameId);
+    state = build();
   }
 
   Future<void> setAvatar(int id) async {
-    await _p.setInt(_avatar, id);
-    state = _load(DateTime.now());
+    await _p.setInt('avatarId', id);
+    state = build();
   }
 
-  /// Aura earned today so far (resets at local midnight).
-  int earnedToday(DateTime now) => _load(now)?.auraToday ?? 0;
-
-  Future<void> addSession({required int aura, required DateTime at}) async {
-    final today = earnedToday(at);
-    await _p.setInt(_total, (_p.getInt(_total) ?? 0) + aura);
-    await _p.setString(_day, _dayKey(at));
-    await _p.setInt(_today, today + aura);
-    await _p.setInt(_sessions, (_p.getInt(_sessions) ?? 0) + 1);
-    state = _load(at);
+  Future<void> setSkin(int id) async {
+    await _p.setInt('skinId', id);
+    state = build();
   }
 }
 
 final profileProvider = NotifierProvider<ProfileNotifier, Profile?>(ProfileNotifier.new);
+
+/// Aura, streak, skins and history from the database.
+class ProgressNotifier extends AsyncNotifier<ProgressSnapshot> {
+  @override
+  Future<ProgressSnapshot> build() => ref.read(repoProvider).load(DateTime.now());
+
+  Future<void> refresh() async {
+    state = AsyncData(await ref.read(repoProvider).load(DateTime.now()));
+  }
+
+  Future<void> markSkinsSeen() async {
+    await ref.read(repoProvider).markSkinsSeen();
+    await refresh();
+  }
+}
+
+final progressProvider = AsyncNotifierProvider<ProgressNotifier, ProgressSnapshot>(ProgressNotifier.new);
+
+/// Convenience: latest snapshot, or empty while loading.
+final progressValueProvider = Provider<ProgressSnapshot>(
+  (ref) => ref.watch(progressProvider).value ?? ProgressSnapshot.empty,
+);
 
 /// App settings (shared preferences).
 class Settings {

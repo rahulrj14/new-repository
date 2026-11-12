@@ -48,19 +48,19 @@ class _HoldButtonState extends State<HoldButton> with SingleTickerProviderStateM
         child: AnimatedBuilder(
           animation: _c,
           builder: (context, _) => ClipRRect(
-            borderRadius: BorderRadius.circular(LockRadius.pill),
+            borderRadius: BorderRadius.circular(LockRadius.button),
             child: SizedBox(
               height: 60,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Container(color: LockColors.surface),
+                  Container(color: Colors.white.withValues(alpha: 0.18)),
                   FractionallySizedBox(
                     alignment: Alignment.centerLeft,
                     widthFactor: _c.value,
-                    child: Container(color: LockColors.crack.withValues(alpha: 0.5)),
+                    child: Container(color: Colors.white.withValues(alpha: 0.45)),
                   ),
-                  Center(child: Text(widget.label, style: text.titleMedium?.copyWith(color: LockColors.muted))),
+                  Center(child: Text(widget.label, style: text.titleMedium?.copyWith(color: Colors.white))),
                 ],
               ),
             ),

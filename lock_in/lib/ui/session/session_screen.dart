@@ -1,8 +1,8 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../catalog/avatars.dart';
 import '../../config.dart';
 import '../../detection/grace_tracker.dart';
 import '../../progression/aura.dart';
@@ -33,107 +33,112 @@ class SessionScreen extends ConsumerWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) context.go(hasResult ? '/results' : '/');
       });
-      return const Scaffold();
+      return const Scaffold(backgroundColor: LockColors.blue);
     }
     final text = Theme.of(context).textTheme;
-    final avatar = avatarById(profile.avatarId);
     final phase = s.phase;
     final alarm = phase == SessionPhase.grace || phase == SessionPhase.cracked;
-    final accent = alarm ? LockColors.crack : avatar.color;
+    final bg = alarm ? LockColors.coral : LockColors.blue;
+    final today = ref.watch(progressValueProvider).auraToday;
     final liveAura = scoreSession(
       locked: s.locked,
       cracks: s.cracks,
       completedPlannedLength: false,
-      earnedTodaySoFar: profile.auraToday,
+      earnedTodaySoFar: today,
     ).total;
 
-    final (headline, sub) = switch (phase) {
-      SessionPhase.settling => ('lock your\nphone 👇', 'starts in ${s.settleLeft.inSeconds.clamp(0, 99) + 1}s'),
-      SessionPhase.grace => ('lock it!', 'press power within ${s.graceLeft ?? 0}s or it cracks'),
-      SessionPhase.cracked => ('cracked 💔', 'lock your phone to keep farming'),
-      SessionPhase.locked => ('locked in', 'phone down. aura up.'),
-      SessionPhase.done => ('done ✦', ''),
+    final (bubble, sub) = switch (phase) {
+      SessionPhase.settling => ('lock your phone 👇', 'starts in ${s.settleLeft.inSeconds.clamp(0, 99) + 1}s'),
+      SessionPhase.grace => ('LOCK IT!! 😱', 'press power within ${s.graceLeft ?? 0}s or I crack'),
+      SessionPhase.cracked => ('ouch. I cracked 💔', 'lock your phone to keep farming'),
+      SessionPhase.locked => ('zzz… locked in 😴', 'phone down. aura up.'),
+      SessionPhase.done => ('we did it ✨', ''),
     };
     final mood = switch (phase) {
       SessionPhase.locked => BlobMood.sleepy,
-      SessionPhase.grace => BlobMood.shocked,
-      SessionPhase.cracked => BlobMood.shocked,
+      SessionPhase.grace || SessionPhase.cracked => BlobMood.shocked,
       _ => BlobMood.idle,
     };
 
     return PopScope(
       canPop: false,
-      child: Scaffold(
-        body: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(0, -0.2),
-              radius: 1.1,
-              colors: [accent.withValues(alpha: alarm ? 0.22 : 0.10), LockColors.bg],
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light.copyWith(systemNavigationBarColor: bg),
+        child: Scaffold(
+          body: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [bg, Color.lerp(bg, Colors.black, 0.2)!],
+              ),
             ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Semantics(
-                        label: s.engine.endsAt == null
-                            ? 'Elapsed ${fmtClock(s.clock)}'
-                            : '${fmtClock(s.clock)} left',
-                        excludeSemantics: true,
-                        child: Text(fmtClock(s.clock),
-                            style: text.headlineMedium?.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
-                      ),
-                      const Spacer(),
-                      AuraPill(aura: liveAura),
-                    ],
-                  ),
-                  if (s.cracks > 0)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Text('💔 × ${s.cracks}', style: text.titleMedium?.copyWith(color: LockColors.crack)),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Semantics(
+                          label: s.engine.endsAt == null ? 'Elapsed ${fmtClock(s.clock)}' : '${fmtClock(s.clock)} left',
+                          excludeSemantics: true,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(LockRadius.pill),
+                            ),
+                            child: Text(
+                              fmtClock(s.clock),
+                              style: text.headlineMedium?.copyWith(
+                                color: Colors.white,
+                                fontFeatures: const [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        AuraPill(aura: liveAura, onBlue: true),
+                      ],
                     ),
-                  const Spacer(),
-                  Center(
-                    child: Glow(
-                      color: accent,
-                      size: 300,
+                    if (s.cracks > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text('💔 × ${s.cracks}', style: text.titleMedium?.copyWith(color: Colors.white)),
+                      ),
+                    const Spacer(),
+                    Semantics(
+                      liveRegion: true,
+                      child: Center(child: ChatBubble(text: bubble, textColor: alarm ? LockColors.coral : LockColors.ink)),
+                    ),
+                    const SizedBox(height: 6),
+                    Center(
                       child: BlobAvatar(
-                        avatarId: avatar.id,
-                        size: 200,
+                        avatarId: profile.avatarId,
+                        skinId: profile.skinId,
+                        size: 210,
                         mood: mood,
                         cracked: phase == SessionPhase.cracked,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Semantics(
-                    liveRegion: true,
-                    child: Column(
-                      children: [
-                        if (phase == SessionPhase.grace)
-                          Text('${s.graceLeft ?? 0}',
-                              style: text.displayLarge?.copyWith(color: LockColors.crack)),
-                        Text(headline,
-                            textAlign: TextAlign.center,
-                            style: text.headlineLarge?.copyWith(color: alarm ? LockColors.crack : LockColors.text)),
-                        const SizedBox(height: 8),
-                        Text(sub, textAlign: TextAlign.center, style: text.bodyLarge?.copyWith(color: LockColors.muted)),
-                      ],
+                    if (phase == SessionPhase.grace)
+                      Text('${s.graceLeft ?? 0}',
+                          textAlign: TextAlign.center, style: text.displayLarge?.copyWith(color: Colors.white)),
+                    const SizedBox(height: 8),
+                    Text(sub,
+                        textAlign: TextAlign.center,
+                        style: text.bodyLarge?.copyWith(color: Colors.white.withValues(alpha: 0.9))),
+                    const Spacer(),
+                    if (kDebugTools) const _DebugBar(),
+                    HoldButton(
+                      label: 'hold to end',
+                      onConfirmed: () => ref.read(sessionProvider.notifier).finish(),
                     ),
-                  ),
-                  const Spacer(),
-                  if (kDebugTools) const _DebugBar(),
-                  HoldButton(
-                    label: 'hold to end',
-                    onConfirmed: () => ref.read(sessionProvider.notifier).finish(),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -150,7 +155,13 @@ class _DebugBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = ref.read(sessionProvider.notifier);
-    Widget chip(String label, VoidCallback onTap) => ActionChip(label: Text(label), onPressed: onTap);
+    Widget chip(String label, VoidCallback onTap) => ActionChip(
+          label: Text(label),
+          onPressed: onTap,
+          backgroundColor: Colors.white,
+          side: BorderSide.none,
+          shape: const StadiumBorder(),
+        );
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Wrap(

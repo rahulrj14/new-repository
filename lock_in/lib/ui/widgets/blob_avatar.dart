@@ -3,15 +3,18 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 
 import '../../catalog/avatars.dart';
+import '../../catalog/skins.dart';
 
 enum BlobMood { idle, sleepy, shocked, happy }
 
-/// An expressive blob character. Bobs gently (unless reduced motion is on)
-/// and can show a crack that draws itself across the body.
+/// An expressive blob character drawn as a sticker: thick white outline,
+/// soft drop shadow, optional skin accessory. Bobs gently (unless reduced
+/// motion is on) and can show a crack that draws itself across the body.
 class BlobAvatar extends StatefulWidget {
   const BlobAvatar({
     super.key,
     required this.avatarId,
+    this.skinId = 0,
     this.size = 160,
     this.mood = BlobMood.idle,
     this.cracked = false,
@@ -20,6 +23,7 @@ class BlobAvatar extends StatefulWidget {
   });
 
   final int avatarId;
+  final int skinId;
   final double size;
   final BlobMood mood;
   final bool cracked;
@@ -33,8 +37,8 @@ class BlobAvatar extends StatefulWidget {
 class _BlobAvatarState extends State<BlobAvatar> with TickerProviderStateMixin {
   late final AnimationController _bob =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 2400));
-  late final AnimationController _crack =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 650), value: widget.cracked ? 1 : 0);
+  late final AnimationController _crack = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 650), value: widget.cracked ? 1 : 0);
 
   bool get _motion => widget.animate && !(MediaQuery.maybeDisableAnimationsOf(context) ?? false);
 
@@ -51,6 +55,7 @@ class _BlobAvatarState extends State<BlobAvatar> with TickerProviderStateMixin {
   @override
   void didUpdateWidget(BlobAvatar old) {
     super.didUpdateWidget(old);
+    if (widget.animate != old.animate) didChangeDependencies();
     if (widget.cracked && !old.cracked) {
       _motion ? _crack.forward(from: 0) : _crack.value = 1;
     } else if (!widget.cracked && old.cracked) {
@@ -68,14 +73,14 @@ class _BlobAvatarState extends State<BlobAvatar> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final spec = avatarById(widget.avatarId);
+    final skin = skinById(widget.skinId);
     return Semantics(
-      label: widget.semanticLabel ?? spec.name,
+      label: widget.semanticLabel ?? (skin.id == 0 ? spec.name : '${spec.name} wearing ${skin.name}'),
       image: true,
       child: AnimatedBuilder(
         animation: Listenable.merge([_bob, _crack]),
         builder: (context, _) {
           final t = _bob.value * 2 * math.pi;
-          // Shake while the crack is drawing in.
           final shake = _crack.isAnimating ? math.sin(_crack.value * 40) * 6 * (1 - _crack.value) : 0.0;
           final bob = _motion ? math.sin(t) * widget.size * 0.03 : 0.0;
           final squash = _motion ? 1 + math.sin(t * 2) * 0.015 : 1.0;
@@ -86,7 +91,7 @@ class _BlobAvatarState extends State<BlobAvatar> with TickerProviderStateMixin {
               scaleY: 2 - squash,
               child: CustomPaint(
                 size: Size.square(widget.size),
-                painter: _BlobPainter(spec, widget.mood, _crack.value),
+                painter: BlobPainter(spec, skin.accessory, widget.mood, _crack.value),
               ),
             ),
           );
@@ -96,37 +101,54 @@ class _BlobAvatarState extends State<BlobAvatar> with TickerProviderStateMixin {
   }
 }
 
-class _BlobPainter extends CustomPainter {
-  _BlobPainter(this.spec, this.mood, this.crack);
+class BlobPainter extends CustomPainter {
+  BlobPainter(this.spec, this.accessory, this.mood, this.crack);
   final AvatarSpec spec;
+  final Accessory accessory;
   final BlobMood mood;
   final double crack;
 
-  static const ink = Color(0xFF0A0A0F);
+  static const ink = Color(0xFF111827);
+  static const sun = Color(0xFFFFC530);
+  static const coral = Color(0xFFFF4D6A);
+
+  bool get _hat => switch (accessory) {
+        Accessory.beanie || Accessory.partyHat || Accessory.crown || Accessory.cap => true,
+        _ => false,
+      };
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width;
     final body = _bodyPath(s);
-    final fill = Paint()..color = spec.color;
+    final outlineW = s * 0.06;
 
-    // Soft glow.
+    // Drop shadow.
     canvas.drawPath(
-      body.shift(Offset(0, s * 0.03)),
+      body.shift(Offset(0, s * 0.04)),
       Paint()
-        ..color = spec.color.withValues(alpha: 0.35)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
+        ..color = const Color(0x33111827)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
     );
-    _topper(canvas, s);
-    canvas.drawPath(body, fill);
+    // Sticker outline (white), then fills.
+    final outline = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = outlineW
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+    if (!_hat) _topper(canvas, s, outline: outline);
+    canvas.drawPath(body, outline);
+    if (!_hat) _topper(canvas, s);
+    canvas.drawPath(body, Paint()..color = spec.color);
     // Highlight.
     canvas.save();
     canvas.clipPath(body);
-    canvas.drawCircle(Offset(s * 0.33, s * 0.33), s * 0.16,
-        Paint()..color = Colors.white.withValues(alpha: 0.22));
+    canvas.drawCircle(Offset(s * 0.33, s * 0.33), s * 0.16, Paint()..color = Colors.white.withValues(alpha: 0.25));
     canvas.restore();
 
     _face(canvas, s);
+    _accessory(canvas, s);
     if (crack > 0) _crackLines(canvas, s, body);
   }
 
@@ -154,13 +176,14 @@ class _BlobPainter extends CustomPainter {
     }
   }
 
-  void _topper(Canvas canvas, double s) {
-    final fill = Paint()..color = spec.color;
+  void _topper(Canvas canvas, double s, {Paint? outline}) {
+    final fill = outline ?? (Paint()..color = spec.color);
     final stroke = Paint()
-      ..color = spec.color
-      ..strokeWidth = s * 0.03
+      ..color = outline?.color ?? spec.color
+      ..strokeWidth = s * 0.03 + (outline?.strokeWidth ?? 0)
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
+    void shape(Path p, Paint own) => canvas.drawPath(p, outline ?? own);
     switch (spec.topper) {
       case BlobTopper.none:
         break;
@@ -169,7 +192,7 @@ class _BlobPainter extends CustomPainter {
         canvas.drawCircle(Offset(s * 0.56, s * 0.08), s * 0.045, fill);
       case BlobTopper.ears:
         for (final x in [0.28, 0.72]) {
-          canvas.drawPath(
+          shape(
             Path()
               ..moveTo(s * (x - 0.1), s * 0.3)
               ..lineTo(s * x, s * 0.1)
@@ -181,32 +204,31 @@ class _BlobPainter extends CustomPainter {
       case BlobTopper.horns:
         for (final d in [-1.0, 1.0]) {
           final x = 0.5 + 0.2 * d;
-          canvas.drawPath(
+          shape(
             Path()
               ..moveTo(s * (x - 0.06), s * 0.26)
               ..quadraticBezierTo(s * (x + 0.02 * d), s * 0.18, s * (x + 0.08 * d), s * 0.08)
               ..lineTo(s * (x + 0.06), s * 0.26)
               ..close(),
-            Paint()..color = Colors.white.withValues(alpha: 0.9),
+            Paint()..color = const Color(0xFFFFF4E0),
           );
         }
       case BlobTopper.sprout:
         canvas.drawLine(Offset(s * 0.5, s * 0.26), Offset(s * 0.5, s * 0.14), stroke);
         for (final d in [-1.0, 1.0]) {
-          canvas.drawOval(
-            Rect.fromCenter(center: Offset(s * (0.5 + 0.07 * d), s * 0.12), width: s * 0.13, height: s * 0.07),
-            Paint()..color = const Color(0xFF3DFF8F),
-          );
+          final leaf = Path()
+            ..addOval(Rect.fromCenter(center: Offset(s * (0.5 + 0.07 * d), s * 0.12), width: s * 0.13, height: s * 0.07));
+          shape(leaf, Paint()..color = const Color(0xFF19C38A));
         }
       case BlobTopper.flame:
-        canvas.drawPath(
+        shape(
           Path()
             ..moveTo(s * 0.4, s * 0.24)
             ..quadraticBezierTo(s * 0.38, s * 0.1, s * 0.5, s * 0.03)
             ..quadraticBezierTo(s * 0.48, s * 0.14, s * 0.58, s * 0.12)
             ..quadraticBezierTo(s * 0.64, s * 0.18, s * 0.6, s * 0.24)
             ..close(),
-          Paint()..color = const Color(0xFFFFD23D),
+          Paint()..color = sun,
         );
     }
   }
@@ -220,43 +242,211 @@ class _BlobPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     final eyeY = s * 0.5;
     final eyes = [Offset(s * 0.39, eyeY), Offset(s * 0.61, eyeY)];
+    final coversEyes = accessory == Accessory.shades || accessory == Accessory.starGlasses;
     switch (mood) {
       case BlobMood.idle:
-        for (final e in eyes) {
-          canvas.drawOval(Rect.fromCenter(center: e, width: s * 0.07, height: s * 0.1), inkP);
-          canvas.drawCircle(e.translate(s * 0.012, -s * 0.02), s * 0.012, Paint()..color = Colors.white);
+        if (!coversEyes) {
+          for (final e in eyes) {
+            canvas.drawOval(Rect.fromCenter(center: e, width: s * 0.07, height: s * 0.1), inkP);
+            canvas.drawCircle(e.translate(s * 0.012, -s * 0.02), s * 0.012, Paint()..color = Colors.white);
+          }
         }
-        canvas.drawArc(Rect.fromCenter(center: Offset(s * 0.5, s * 0.6), width: s * 0.12, height: s * 0.08),
-            0.2, math.pi - 0.4, false, line);
+        canvas.drawArc(Rect.fromCenter(center: Offset(s * 0.5, s * 0.62), width: s * 0.12, height: s * 0.08), 0.2,
+            math.pi - 0.4, false, line);
       case BlobMood.sleepy:
-        for (final e in eyes) {
-          canvas.drawArc(Rect.fromCenter(center: e, width: s * 0.09, height: s * 0.06), 0.1, math.pi - 0.2, false, line);
+        if (!coversEyes) {
+          for (final e in eyes) {
+            canvas.drawArc(
+                Rect.fromCenter(center: e, width: s * 0.09, height: s * 0.06), 0.1, math.pi - 0.2, false, line);
+          }
         }
-        canvas.drawOval(Rect.fromCenter(center: Offset(s * 0.5, s * 0.63), width: s * 0.05, height: s * 0.035), inkP);
+        canvas.drawOval(Rect.fromCenter(center: Offset(s * 0.5, s * 0.64), width: s * 0.05, height: s * 0.035), inkP);
       case BlobMood.shocked:
-        for (final e in eyes) {
-          canvas.drawCircle(e, s * 0.06, Paint()..color = Colors.white);
-          canvas.drawCircle(e, s * 0.03, inkP);
+        if (!coversEyes) {
+          for (final e in eyes) {
+            canvas.drawCircle(e, s * 0.06, Paint()..color = Colors.white);
+            canvas.drawCircle(e, s * 0.03, inkP);
+          }
         }
-        canvas.drawOval(Rect.fromCenter(center: Offset(s * 0.5, s * 0.66), width: s * 0.08, height: s * 0.1), inkP);
+        canvas.drawOval(Rect.fromCenter(center: Offset(s * 0.5, s * 0.67), width: s * 0.08, height: s * 0.1), inkP);
       case BlobMood.happy:
-        for (final e in eyes) {
-          canvas.drawArc(Rect.fromCenter(center: e.translate(0, s * 0.02), width: s * 0.09, height: s * 0.08),
-              math.pi + 0.2, math.pi - 0.4, false, line);
+        if (!coversEyes) {
+          for (final e in eyes) {
+            canvas.drawArc(Rect.fromCenter(center: e.translate(0, s * 0.02), width: s * 0.09, height: s * 0.08),
+                math.pi + 0.2, math.pi - 0.4, false, line);
+          }
         }
         canvas.drawPath(
           Path()
-            ..moveTo(s * 0.42, s * 0.6)
-            ..quadraticBezierTo(s * 0.5, s * 0.72, s * 0.58, s * 0.6)
+            ..moveTo(s * 0.42, s * 0.61)
+            ..quadraticBezierTo(s * 0.5, s * 0.73, s * 0.58, s * 0.61)
             ..close(),
           inkP,
         );
     }
-    // Cheeks.
     for (final x in [0.3, 0.7]) {
       canvas.drawOval(Rect.fromCenter(center: Offset(s * x, s * 0.6), width: s * 0.08, height: s * 0.04),
           Paint()..color = const Color(0xFFFF5F8F).withValues(alpha: 0.45));
     }
+  }
+
+  void _accessory(Canvas canvas, double s) {
+    final edge = Paint()
+      ..color = ink
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = s * 0.018
+      ..strokeJoin = StrokeJoin.round;
+    void filled(Path p, Color c) {
+      canvas.drawPath(p, Paint()..color = c);
+      canvas.drawPath(p, edge);
+    }
+
+    switch (accessory) {
+      case Accessory.none:
+        break;
+      case Accessory.shades:
+        for (final x in [0.39, 0.61]) {
+          filled(
+            Path()
+              ..addRRect(RRect.fromRectAndRadius(
+                  Rect.fromCenter(center: Offset(s * x, s * 0.5), width: s * 0.17, height: s * 0.11),
+                  Radius.circular(s * 0.04))),
+            ink,
+          );
+          canvas.drawLine(Offset(s * (x - 0.05), s * 0.48), Offset(s * (x - 0.02), s * 0.465),
+              Paint()
+                ..color = Colors.white.withValues(alpha: 0.8)
+                ..strokeWidth = s * 0.015
+                ..strokeCap = StrokeCap.round);
+        }
+        canvas.drawLine(Offset(s * 0.47, s * 0.49), Offset(s * 0.53, s * 0.49), edge);
+      case Accessory.starGlasses:
+        for (final x in [0.39, 0.61]) {
+          filled(_star(Offset(s * x, s * 0.5), s * 0.095, s * 0.045), const Color(0xFFFF7EB6));
+        }
+        canvas.drawLine(Offset(s * 0.47, s * 0.49), Offset(s * 0.53, s * 0.49), edge);
+      case Accessory.headphones:
+        canvas.drawArc(
+          Rect.fromLTRB(s * 0.14, s * 0.1, s * 0.86, s * 0.7),
+          math.pi * 1.05,
+          math.pi * 0.9,
+          false,
+          Paint()
+            ..color = const Color(0xFF374151)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = s * 0.05
+            ..strokeCap = StrokeCap.round,
+        );
+        for (final x in [0.13, 0.87]) {
+          filled(
+            Path()
+              ..addRRect(RRect.fromRectAndRadius(
+                  Rect.fromCenter(center: Offset(s * x, s * 0.45), width: s * 0.11, height: s * 0.2),
+                  Radius.circular(s * 0.05))),
+            coral,
+          );
+        }
+      case Accessory.beanie:
+        filled(
+          Path()
+            ..moveTo(s * 0.2, s * 0.34)
+            ..cubicTo(s * 0.2, s * 0.08, s * 0.8, s * 0.08, s * 0.8, s * 0.34)
+            ..close(),
+          const Color(0xFF2C6BFF),
+        );
+        filled(
+          Path()
+            ..addRRect(RRect.fromRectAndRadius(
+                Rect.fromLTRB(s * 0.17, s * 0.29, s * 0.83, s * 0.38), Radius.circular(s * 0.04))),
+          const Color(0xFF1C4ED8),
+        );
+        filled(Path()..addOval(Rect.fromCircle(center: Offset(s * 0.5, s * 0.12), radius: s * 0.05)), Colors.white);
+      case Accessory.partyHat:
+        final hat = Path()
+          ..moveTo(s * 0.38, s * 0.27)
+          ..lineTo(s * 0.62, s * 0.27)
+          ..lineTo(s * 0.53, s * 0.02)
+          ..close();
+        filled(hat, sun);
+        canvas.save();
+        canvas.clipPath(hat);
+        for (final y in [0.2, 0.12]) {
+          canvas.drawLine(Offset(s * 0.3, s * (y + 0.04)), Offset(s * 0.7, s * (y - 0.04)),
+              Paint()
+                ..color = coral
+                ..strokeWidth = s * 0.03);
+        }
+        canvas.restore();
+        canvas.drawPath(hat, edge);
+        filled(Path()..addOval(Rect.fromCircle(center: Offset(s * 0.53, s * 0.03), radius: s * 0.035)), coral);
+      case Accessory.flower:
+        final c = Offset(s * 0.76, s * 0.27);
+        for (var i = 0; i < 5; i++) {
+          final a = i * 2 * math.pi / 5;
+          filled(
+            Path()..addOval(Rect.fromCircle(center: c + Offset(math.cos(a), math.sin(a)) * s * 0.055, radius: s * 0.045)),
+            const Color(0xFFFF9EC4),
+          );
+        }
+        filled(Path()..addOval(Rect.fromCircle(center: c, radius: s * 0.035)), sun);
+      case Accessory.crown:
+        filled(
+          Path()
+            ..moveTo(s * 0.33, s * 0.27)
+            ..lineTo(s * 0.33, s * 0.1)
+            ..lineTo(s * 0.42, s * 0.18)
+            ..lineTo(s * 0.5, s * 0.05)
+            ..lineTo(s * 0.58, s * 0.18)
+            ..lineTo(s * 0.67, s * 0.1)
+            ..lineTo(s * 0.67, s * 0.27)
+            ..close(),
+          sun,
+        );
+        for (final x in [0.42, 0.5, 0.58]) {
+          canvas.drawCircle(Offset(s * x, s * 0.23), s * 0.018, Paint()..color = coral);
+        }
+      case Accessory.halo:
+        final r = Rect.fromCenter(center: Offset(s * 0.5, s * 0.1), width: s * 0.42, height: s * 0.1);
+        canvas.drawOval(r,
+            Paint()
+              ..color = sun.withValues(alpha: 0.5)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = s * 0.06
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
+        canvas.drawOval(r,
+            Paint()
+              ..color = sun
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = s * 0.03);
+      case Accessory.cap:
+        filled(
+          Path()
+            ..moveTo(s * 0.5, s * 0.31)
+            ..lineTo(s * 0.96, s * 0.33)
+            ..quadraticBezierTo(s * 0.9, s * 0.26, s * 0.62, s * 0.26)
+            ..close(),
+          const Color(0xFFD93A55),
+        );
+        filled(
+          Path()
+            ..moveTo(s * 0.2, s * 0.34)
+            ..cubicTo(s * 0.2, s * 0.1, s * 0.8, s * 0.1, s * 0.8, s * 0.34)
+            ..close(),
+          coral,
+        );
+        filled(Path()..addOval(Rect.fromCircle(center: Offset(s * 0.5, s * 0.15), radius: s * 0.025)), Colors.white);
+    }
+  }
+
+  Path _star(Offset c, double outer, double inner) {
+    final p = Path();
+    for (var i = 0; i < 10; i++) {
+      final r = i.isEven ? outer : inner;
+      final a = -math.pi / 2 + i * math.pi / 5;
+      final pt = c + Offset(math.cos(a), math.sin(a)) * r;
+      i == 0 ? p.moveTo(pt.dx, pt.dy) : p.lineTo(pt.dx, pt.dy);
+    }
+    return p..close();
   }
 
   void _crackLines(Canvas canvas, double s, Path body) {
@@ -289,19 +479,23 @@ class _BlobPainter extends CustomPainter {
       final f = ((crack - start) / (1 - start)).clamp(0.0, 1.0);
       if (f <= 0) continue;
       final path = poly(p, f);
-      canvas.drawPath(path, Paint()
-        ..color = ink
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = s * 0.045
-        ..strokeJoin = StrokeJoin.miter);
-      canvas.drawPath(path, Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = s * 0.015);
+      canvas.drawPath(
+          path,
+          Paint()
+            ..color = ink
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = s * 0.045);
+      canvas.drawPath(
+          path,
+          Paint()
+            ..color = Colors.white
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = s * 0.015);
     }
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(_BlobPainter old) => old.spec != spec || old.mood != mood || old.crack != crack;
+  bool shouldRepaint(BlobPainter old) =>
+      old.spec != spec || old.accessory != accessory || old.mood != mood || old.crack != crack;
 }
