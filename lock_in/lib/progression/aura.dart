@@ -12,6 +12,12 @@ class AuraRules {
 
   /// Healthy cap: no reason to grind past this in a day.
   static const dailyCap = 300;
+
+  /// Relocking in the last 3 s of the grace window.
+  static const clutchBonus = 2;
+
+  /// Group session where nobody cracked: base aura x1.5.
+  static const squadMultiplier = 1.5;
 }
 
 class AuraBreakdown {
@@ -22,12 +28,18 @@ class AuraBreakdown {
     required this.bonus,
     required this.capTrimmed,
     required this.total,
+    this.clutch = 0,
+    this.squad = 0,
   });
 
   final int lockedMinutes;
   final int base;
   final int penalty;
   final int bonus;
+  final int clutch;
+
+  /// Extra aura from the squad multiplier.
+  final int squad;
 
   /// Aura that would have been earned but was over today's cap.
   final int capTrimmed;
@@ -42,24 +54,36 @@ AuraBreakdown scoreSession({
   required bool completedPlannedLength,
   Duration? plannedLength,
   required int earnedTodaySoFar,
+  int clutches = 0,
+  bool squadClean = false,
 }) {
   final minutes = locked.inMinutes;
   final base = minutes * AuraRules.perLockedMinute;
+  final clutch = clutches * AuraRules.clutchBonus;
+  final squad = squadClean
+      ? (base * (AuraRules.squadMultiplier - 1)).round()
+      : 0;
   final penalty = cracks * AuraRules.crackPenalty;
-  final bonus = completedPlannedLength &&
+  final bonus =
+      completedPlannedLength &&
           cracks == 0 &&
           plannedLength != null &&
           plannedLength >= AuraRules.minBonusLength
       ? AuraRules.cleanFinishBonus
       : 0;
-  final raw = (base - penalty + bonus).clamp(0, 1 << 30);
-  final room = (AuraRules.dailyCap - earnedTodaySoFar).clamp(0, AuraRules.dailyCap);
+  final raw = (base - penalty + bonus + clutch + squad).clamp(0, 1 << 30);
+  final room = (AuraRules.dailyCap - earnedTodaySoFar).clamp(
+    0,
+    AuraRules.dailyCap,
+  );
   final total = raw < room ? raw : room;
   return AuraBreakdown(
     lockedMinutes: minutes,
     base: base,
     penalty: penalty > base + bonus ? base + bonus : penalty,
     bonus: bonus,
+    clutch: clutch,
+    squad: squad,
     capTrimmed: raw - total,
     total: total,
   );

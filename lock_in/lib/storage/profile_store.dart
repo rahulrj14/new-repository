@@ -11,13 +11,21 @@ const activeSessionKey = 'activeSessionStart';
 final interruptedAtLaunchProvider = Provider<bool>((ref) => false);
 
 /// Overridden in main() with the loaded instances.
-final prefsProvider = Provider<SharedPreferences>((ref) => throw UnimplementedError());
+final prefsProvider = Provider<SharedPreferences>(
+  (ref) => throw UnimplementedError(),
+);
 final dbProvider = Provider<AppDatabase>((ref) => throw UnimplementedError());
-final repoProvider = Provider<ProgressRepo>((ref) => ProgressRepo(ref.watch(dbProvider)));
+final repoProvider = Provider<ProgressRepo>(
+  (ref) => ProgressRepo(ref.watch(dbProvider)),
+);
 
 /// Who I am: catalog IDs only, never free text. Small, so it lives in prefs.
 class Profile {
-  const Profile({required this.avatarId, required this.nicknameId, required this.skinId});
+  const Profile({
+    required this.avatarId,
+    required this.nicknameId,
+    required this.skinId,
+  });
   final int avatarId;
   final int nicknameId;
   final int skinId;
@@ -31,7 +39,11 @@ class ProfileNotifier extends Notifier<Profile?> {
     final avatar = _p.getInt('avatarId');
     final nick = _p.getInt('nicknameId');
     if (avatar == null || nick == null) return null;
-    return Profile(avatarId: avatar, nicknameId: nick, skinId: _p.getInt('skinId') ?? 0);
+    return Profile(
+      avatarId: avatar,
+      nicknameId: nick,
+      skinId: _p.getInt('skinId') ?? 0,
+    );
   }
 
   Future<void> create({required int avatarId, required int nicknameId}) async {
@@ -51,12 +63,15 @@ class ProfileNotifier extends Notifier<Profile?> {
   }
 }
 
-final profileProvider = NotifierProvider<ProfileNotifier, Profile?>(ProfileNotifier.new);
+final profileProvider = NotifierProvider<ProfileNotifier, Profile?>(
+  ProfileNotifier.new,
+);
 
 /// Aura, streak, skins and history from the database.
 class ProgressNotifier extends AsyncNotifier<ProgressSnapshot> {
   @override
-  Future<ProgressSnapshot> build() => ref.read(repoProvider).load(DateTime.now());
+  Future<ProgressSnapshot> build() =>
+      ref.read(repoProvider).load(DateTime.now());
 
   Future<void> refresh() async {
     state = AsyncData(await ref.read(repoProvider).load(DateTime.now()));
@@ -68,7 +83,10 @@ class ProgressNotifier extends AsyncNotifier<ProgressSnapshot> {
   }
 }
 
-final progressProvider = AsyncNotifierProvider<ProgressNotifier, ProgressSnapshot>(ProgressNotifier.new);
+final progressProvider =
+    AsyncNotifierProvider<ProgressNotifier, ProgressSnapshot>(
+      ProgressNotifier.new,
+    );
 
 /// Convenience: latest snapshot, or empty while loading.
 final progressValueProvider = Provider<ProgressSnapshot>(
@@ -87,9 +105,9 @@ class SettingsNotifier extends Notifier<Settings> {
 
   @override
   Settings build() => Settings(
-        haptics: _p.getBool('haptics') ?? true,
-        reduceMotion: _p.getBool('reduceMotion') ?? false,
-      );
+    haptics: _p.getBool('haptics') ?? true,
+    reduceMotion: _p.getBool('reduceMotion') ?? false,
+  );
 
   Future<void> setHaptics(bool v) async {
     await _p.setBool('haptics', v);
@@ -102,4 +120,6 @@ class SettingsNotifier extends Notifier<Settings> {
   }
 }
 
-final settingsProvider = NotifierProvider<SettingsNotifier, Settings>(SettingsNotifier.new);
+final settingsProvider = NotifierProvider<SettingsNotifier, Settings>(
+  SettingsNotifier.new,
+);

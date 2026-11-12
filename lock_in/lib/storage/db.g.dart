@@ -108,6 +108,95 @@ class $SessionsTable extends Sessions
     requiredDuringInsert: false,
     defaultValue: const Constant('solo'),
   );
+  static const VerificationMeta _vibeMeta = const VerificationMeta('vibe');
+  @override
+  late final GeneratedColumn<String> vibe = GeneratedColumn<String>(
+    'vibe',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('study'),
+  );
+  static const VerificationMeta _clutchesMeta = const VerificationMeta(
+    'clutches',
+  );
+  @override
+  late final GeneratedColumn<int> clutches = GeneratedColumn<int>(
+    'clutches',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _passUsedMeta = const VerificationMeta(
+    'passUsed',
+  );
+  @override
+  late final GeneratedColumn<bool> passUsed = GeneratedColumn<bool>(
+    'pass_used',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("pass_used" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _groupSizeMeta = const VerificationMeta(
+    'groupSize',
+  );
+  @override
+  late final GeneratedColumn<int> groupSize = GeneratedColumn<int>(
+    'group_size',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _squadCleanMeta = const VerificationMeta(
+    'squadClean',
+  );
+  @override
+  late final GeneratedColumn<bool> squadClean = GeneratedColumn<bool>(
+    'squad_clean',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("squad_clean" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _wonMeta = const VerificationMeta('won');
+  @override
+  late final GeneratedColumn<bool> won = GeneratedColumn<bool>(
+    'won',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("won" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _questAuraMeta = const VerificationMeta(
+    'questAura',
+  );
+  @override
+  late final GeneratedColumn<int> questAura = GeneratedColumn<int>(
+    'quest_aura',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -119,6 +208,13 @@ class $SessionsTable extends Sessions
     completed,
     aura,
     mode,
+    vibe,
+    clutches,
+    passUsed,
+    groupSize,
+    squadClean,
+    won,
+    questAura,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -201,6 +297,48 @@ class $SessionsTable extends Sessions
         mode.isAcceptableOrUnknown(data['mode']!, _modeMeta),
       );
     }
+    if (data.containsKey('vibe')) {
+      context.handle(
+        _vibeMeta,
+        vibe.isAcceptableOrUnknown(data['vibe']!, _vibeMeta),
+      );
+    }
+    if (data.containsKey('clutches')) {
+      context.handle(
+        _clutchesMeta,
+        clutches.isAcceptableOrUnknown(data['clutches']!, _clutchesMeta),
+      );
+    }
+    if (data.containsKey('pass_used')) {
+      context.handle(
+        _passUsedMeta,
+        passUsed.isAcceptableOrUnknown(data['pass_used']!, _passUsedMeta),
+      );
+    }
+    if (data.containsKey('group_size')) {
+      context.handle(
+        _groupSizeMeta,
+        groupSize.isAcceptableOrUnknown(data['group_size']!, _groupSizeMeta),
+      );
+    }
+    if (data.containsKey('squad_clean')) {
+      context.handle(
+        _squadCleanMeta,
+        squadClean.isAcceptableOrUnknown(data['squad_clean']!, _squadCleanMeta),
+      );
+    }
+    if (data.containsKey('won')) {
+      context.handle(
+        _wonMeta,
+        won.isAcceptableOrUnknown(data['won']!, _wonMeta),
+      );
+    }
+    if (data.containsKey('quest_aura')) {
+      context.handle(
+        _questAuraMeta,
+        questAura.isAcceptableOrUnknown(data['quest_aura']!, _questAuraMeta),
+      );
+    }
     return context;
   }
 
@@ -246,6 +384,34 @@ class $SessionsTable extends Sessions
         DriftSqlType.string,
         data['${effectivePrefix}mode'],
       )!,
+      vibe: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}vibe'],
+      )!,
+      clutches: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}clutches'],
+      )!,
+      passUsed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}pass_used'],
+      )!,
+      groupSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}group_size'],
+      )!,
+      squadClean: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}squad_clean'],
+      )!,
+      won: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}won'],
+      )!,
+      questAura: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quest_aura'],
+      )!,
     );
   }
 
@@ -269,6 +435,13 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
 
   /// solo | group | migrated
   final String mode;
+  final String vibe;
+  final int clutches;
+  final bool passUsed;
+  final int groupSize;
+  final bool squadClean;
+  final bool won;
+  final int questAura;
   const SessionRow({
     required this.id,
     required this.startedAt,
@@ -279,6 +452,13 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     required this.completed,
     required this.aura,
     required this.mode,
+    required this.vibe,
+    required this.clutches,
+    required this.passUsed,
+    required this.groupSize,
+    required this.squadClean,
+    required this.won,
+    required this.questAura,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -294,6 +474,13 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     map['completed'] = Variable<bool>(completed);
     map['aura'] = Variable<int>(aura);
     map['mode'] = Variable<String>(mode);
+    map['vibe'] = Variable<String>(vibe);
+    map['clutches'] = Variable<int>(clutches);
+    map['pass_used'] = Variable<bool>(passUsed);
+    map['group_size'] = Variable<int>(groupSize);
+    map['squad_clean'] = Variable<bool>(squadClean);
+    map['won'] = Variable<bool>(won);
+    map['quest_aura'] = Variable<int>(questAura);
     return map;
   }
 
@@ -310,6 +497,13 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
       completed: Value(completed),
       aura: Value(aura),
       mode: Value(mode),
+      vibe: Value(vibe),
+      clutches: Value(clutches),
+      passUsed: Value(passUsed),
+      groupSize: Value(groupSize),
+      squadClean: Value(squadClean),
+      won: Value(won),
+      questAura: Value(questAura),
     );
   }
 
@@ -328,6 +522,13 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
       completed: serializer.fromJson<bool>(json['completed']),
       aura: serializer.fromJson<int>(json['aura']),
       mode: serializer.fromJson<String>(json['mode']),
+      vibe: serializer.fromJson<String>(json['vibe']),
+      clutches: serializer.fromJson<int>(json['clutches']),
+      passUsed: serializer.fromJson<bool>(json['passUsed']),
+      groupSize: serializer.fromJson<int>(json['groupSize']),
+      squadClean: serializer.fromJson<bool>(json['squadClean']),
+      won: serializer.fromJson<bool>(json['won']),
+      questAura: serializer.fromJson<int>(json['questAura']),
     );
   }
   @override
@@ -343,6 +544,13 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
       'completed': serializer.toJson<bool>(completed),
       'aura': serializer.toJson<int>(aura),
       'mode': serializer.toJson<String>(mode),
+      'vibe': serializer.toJson<String>(vibe),
+      'clutches': serializer.toJson<int>(clutches),
+      'passUsed': serializer.toJson<bool>(passUsed),
+      'groupSize': serializer.toJson<int>(groupSize),
+      'squadClean': serializer.toJson<bool>(squadClean),
+      'won': serializer.toJson<bool>(won),
+      'questAura': serializer.toJson<int>(questAura),
     };
   }
 
@@ -356,6 +564,13 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     bool? completed,
     int? aura,
     String? mode,
+    String? vibe,
+    int? clutches,
+    bool? passUsed,
+    int? groupSize,
+    bool? squadClean,
+    bool? won,
+    int? questAura,
   }) => SessionRow(
     id: id ?? this.id,
     startedAt: startedAt ?? this.startedAt,
@@ -368,6 +583,13 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     completed: completed ?? this.completed,
     aura: aura ?? this.aura,
     mode: mode ?? this.mode,
+    vibe: vibe ?? this.vibe,
+    clutches: clutches ?? this.clutches,
+    passUsed: passUsed ?? this.passUsed,
+    groupSize: groupSize ?? this.groupSize,
+    squadClean: squadClean ?? this.squadClean,
+    won: won ?? this.won,
+    questAura: questAura ?? this.questAura,
   );
   SessionRow copyWithCompanion(SessionsCompanion data) {
     return SessionRow(
@@ -384,6 +606,15 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
       completed: data.completed.present ? data.completed.value : this.completed,
       aura: data.aura.present ? data.aura.value : this.aura,
       mode: data.mode.present ? data.mode.value : this.mode,
+      vibe: data.vibe.present ? data.vibe.value : this.vibe,
+      clutches: data.clutches.present ? data.clutches.value : this.clutches,
+      passUsed: data.passUsed.present ? data.passUsed.value : this.passUsed,
+      groupSize: data.groupSize.present ? data.groupSize.value : this.groupSize,
+      squadClean: data.squadClean.present
+          ? data.squadClean.value
+          : this.squadClean,
+      won: data.won.present ? data.won.value : this.won,
+      questAura: data.questAura.present ? data.questAura.value : this.questAura,
     );
   }
 
@@ -398,7 +629,14 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
           ..write('cracks: $cracks, ')
           ..write('completed: $completed, ')
           ..write('aura: $aura, ')
-          ..write('mode: $mode')
+          ..write('mode: $mode, ')
+          ..write('vibe: $vibe, ')
+          ..write('clutches: $clutches, ')
+          ..write('passUsed: $passUsed, ')
+          ..write('groupSize: $groupSize, ')
+          ..write('squadClean: $squadClean, ')
+          ..write('won: $won, ')
+          ..write('questAura: $questAura')
           ..write(')'))
         .toString();
   }
@@ -414,6 +652,13 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     completed,
     aura,
     mode,
+    vibe,
+    clutches,
+    passUsed,
+    groupSize,
+    squadClean,
+    won,
+    questAura,
   );
   @override
   bool operator ==(Object other) =>
@@ -427,7 +672,14 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
           other.cracks == this.cracks &&
           other.completed == this.completed &&
           other.aura == this.aura &&
-          other.mode == this.mode);
+          other.mode == this.mode &&
+          other.vibe == this.vibe &&
+          other.clutches == this.clutches &&
+          other.passUsed == this.passUsed &&
+          other.groupSize == this.groupSize &&
+          other.squadClean == this.squadClean &&
+          other.won == this.won &&
+          other.questAura == this.questAura);
 }
 
 class SessionsCompanion extends UpdateCompanion<SessionRow> {
@@ -440,6 +692,13 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
   final Value<bool> completed;
   final Value<int> aura;
   final Value<String> mode;
+  final Value<String> vibe;
+  final Value<int> clutches;
+  final Value<bool> passUsed;
+  final Value<int> groupSize;
+  final Value<bool> squadClean;
+  final Value<bool> won;
+  final Value<int> questAura;
   const SessionsCompanion({
     this.id = const Value.absent(),
     this.startedAt = const Value.absent(),
@@ -450,6 +709,13 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     this.completed = const Value.absent(),
     this.aura = const Value.absent(),
     this.mode = const Value.absent(),
+    this.vibe = const Value.absent(),
+    this.clutches = const Value.absent(),
+    this.passUsed = const Value.absent(),
+    this.groupSize = const Value.absent(),
+    this.squadClean = const Value.absent(),
+    this.won = const Value.absent(),
+    this.questAura = const Value.absent(),
   });
   SessionsCompanion.insert({
     this.id = const Value.absent(),
@@ -461,6 +727,13 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     required bool completed,
     required int aura,
     this.mode = const Value.absent(),
+    this.vibe = const Value.absent(),
+    this.clutches = const Value.absent(),
+    this.passUsed = const Value.absent(),
+    this.groupSize = const Value.absent(),
+    this.squadClean = const Value.absent(),
+    this.won = const Value.absent(),
+    this.questAura = const Value.absent(),
   }) : startedAt = Value(startedAt),
        endedAt = Value(endedAt),
        lockedSeconds = Value(lockedSeconds),
@@ -477,6 +750,13 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     Expression<bool>? completed,
     Expression<int>? aura,
     Expression<String>? mode,
+    Expression<String>? vibe,
+    Expression<int>? clutches,
+    Expression<bool>? passUsed,
+    Expression<int>? groupSize,
+    Expression<bool>? squadClean,
+    Expression<bool>? won,
+    Expression<int>? questAura,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -488,6 +768,13 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
       if (completed != null) 'completed': completed,
       if (aura != null) 'aura': aura,
       if (mode != null) 'mode': mode,
+      if (vibe != null) 'vibe': vibe,
+      if (clutches != null) 'clutches': clutches,
+      if (passUsed != null) 'pass_used': passUsed,
+      if (groupSize != null) 'group_size': groupSize,
+      if (squadClean != null) 'squad_clean': squadClean,
+      if (won != null) 'won': won,
+      if (questAura != null) 'quest_aura': questAura,
     });
   }
 
@@ -501,6 +788,13 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     Value<bool>? completed,
     Value<int>? aura,
     Value<String>? mode,
+    Value<String>? vibe,
+    Value<int>? clutches,
+    Value<bool>? passUsed,
+    Value<int>? groupSize,
+    Value<bool>? squadClean,
+    Value<bool>? won,
+    Value<int>? questAura,
   }) {
     return SessionsCompanion(
       id: id ?? this.id,
@@ -512,6 +806,13 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
       completed: completed ?? this.completed,
       aura: aura ?? this.aura,
       mode: mode ?? this.mode,
+      vibe: vibe ?? this.vibe,
+      clutches: clutches ?? this.clutches,
+      passUsed: passUsed ?? this.passUsed,
+      groupSize: groupSize ?? this.groupSize,
+      squadClean: squadClean ?? this.squadClean,
+      won: won ?? this.won,
+      questAura: questAura ?? this.questAura,
     );
   }
 
@@ -545,6 +846,27 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     if (mode.present) {
       map['mode'] = Variable<String>(mode.value);
     }
+    if (vibe.present) {
+      map['vibe'] = Variable<String>(vibe.value);
+    }
+    if (clutches.present) {
+      map['clutches'] = Variable<int>(clutches.value);
+    }
+    if (passUsed.present) {
+      map['pass_used'] = Variable<bool>(passUsed.value);
+    }
+    if (groupSize.present) {
+      map['group_size'] = Variable<int>(groupSize.value);
+    }
+    if (squadClean.present) {
+      map['squad_clean'] = Variable<bool>(squadClean.value);
+    }
+    if (won.present) {
+      map['won'] = Variable<bool>(won.value);
+    }
+    if (questAura.present) {
+      map['quest_aura'] = Variable<int>(questAura.value);
+    }
     return map;
   }
 
@@ -559,7 +881,14 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
           ..write('cracks: $cracks, ')
           ..write('completed: $completed, ')
           ..write('aura: $aura, ')
-          ..write('mode: $mode')
+          ..write('mode: $mode, ')
+          ..write('vibe: $vibe, ')
+          ..write('clutches: $clutches, ')
+          ..write('passUsed: $passUsed, ')
+          ..write('groupSize: $groupSize, ')
+          ..write('squadClean: $squadClean, ')
+          ..write('won: $won, ')
+          ..write('questAura: $questAura')
           ..write(')'))
         .toString();
   }
@@ -630,6 +959,21 @@ class $DailyActivityTable extends DailyActivity
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _questDoneMeta = const VerificationMeta(
+    'questDone',
+  );
+  @override
+  late final GeneratedColumn<bool> questDone = GeneratedColumn<bool>(
+    'quest_done',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("quest_done" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     day,
@@ -637,6 +981,7 @@ class $DailyActivityTable extends DailyActivity
     aura,
     qualified,
     frozen,
+    questDone,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -683,6 +1028,12 @@ class $DailyActivityTable extends DailyActivity
         frozen.isAcceptableOrUnknown(data['frozen']!, _frozenMeta),
       );
     }
+    if (data.containsKey('quest_done')) {
+      context.handle(
+        _questDoneMeta,
+        questDone.isAcceptableOrUnknown(data['quest_done']!, _questDoneMeta),
+      );
+    }
     return context;
   }
 
@@ -712,6 +1063,10 @@ class $DailyActivityTable extends DailyActivity
         DriftSqlType.bool,
         data['${effectivePrefix}frozen'],
       )!,
+      questDone: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}quest_done'],
+      )!,
     );
   }
 
@@ -730,12 +1085,14 @@ class DayRow extends DataClass implements Insertable<DayRow> {
 
   /// Missed day covered by a streak freeze.
   final bool frozen;
+  final bool questDone;
   const DayRow({
     required this.day,
     required this.lockedSeconds,
     required this.aura,
     required this.qualified,
     required this.frozen,
+    required this.questDone,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -745,6 +1102,7 @@ class DayRow extends DataClass implements Insertable<DayRow> {
     map['aura'] = Variable<int>(aura);
     map['qualified'] = Variable<bool>(qualified);
     map['frozen'] = Variable<bool>(frozen);
+    map['quest_done'] = Variable<bool>(questDone);
     return map;
   }
 
@@ -755,6 +1113,7 @@ class DayRow extends DataClass implements Insertable<DayRow> {
       aura: Value(aura),
       qualified: Value(qualified),
       frozen: Value(frozen),
+      questDone: Value(questDone),
     );
   }
 
@@ -769,6 +1128,7 @@ class DayRow extends DataClass implements Insertable<DayRow> {
       aura: serializer.fromJson<int>(json['aura']),
       qualified: serializer.fromJson<bool>(json['qualified']),
       frozen: serializer.fromJson<bool>(json['frozen']),
+      questDone: serializer.fromJson<bool>(json['questDone']),
     );
   }
   @override
@@ -780,6 +1140,7 @@ class DayRow extends DataClass implements Insertable<DayRow> {
       'aura': serializer.toJson<int>(aura),
       'qualified': serializer.toJson<bool>(qualified),
       'frozen': serializer.toJson<bool>(frozen),
+      'questDone': serializer.toJson<bool>(questDone),
     };
   }
 
@@ -789,12 +1150,14 @@ class DayRow extends DataClass implements Insertable<DayRow> {
     int? aura,
     bool? qualified,
     bool? frozen,
+    bool? questDone,
   }) => DayRow(
     day: day ?? this.day,
     lockedSeconds: lockedSeconds ?? this.lockedSeconds,
     aura: aura ?? this.aura,
     qualified: qualified ?? this.qualified,
     frozen: frozen ?? this.frozen,
+    questDone: questDone ?? this.questDone,
   );
   DayRow copyWithCompanion(DailyActivityCompanion data) {
     return DayRow(
@@ -805,6 +1168,7 @@ class DayRow extends DataClass implements Insertable<DayRow> {
       aura: data.aura.present ? data.aura.value : this.aura,
       qualified: data.qualified.present ? data.qualified.value : this.qualified,
       frozen: data.frozen.present ? data.frozen.value : this.frozen,
+      questDone: data.questDone.present ? data.questDone.value : this.questDone,
     );
   }
 
@@ -815,13 +1179,15 @@ class DayRow extends DataClass implements Insertable<DayRow> {
           ..write('lockedSeconds: $lockedSeconds, ')
           ..write('aura: $aura, ')
           ..write('qualified: $qualified, ')
-          ..write('frozen: $frozen')
+          ..write('frozen: $frozen, ')
+          ..write('questDone: $questDone')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(day, lockedSeconds, aura, qualified, frozen);
+  int get hashCode =>
+      Object.hash(day, lockedSeconds, aura, qualified, frozen, questDone);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -830,7 +1196,8 @@ class DayRow extends DataClass implements Insertable<DayRow> {
           other.lockedSeconds == this.lockedSeconds &&
           other.aura == this.aura &&
           other.qualified == this.qualified &&
-          other.frozen == this.frozen);
+          other.frozen == this.frozen &&
+          other.questDone == this.questDone);
 }
 
 class DailyActivityCompanion extends UpdateCompanion<DayRow> {
@@ -839,12 +1206,14 @@ class DailyActivityCompanion extends UpdateCompanion<DayRow> {
   final Value<int> aura;
   final Value<bool> qualified;
   final Value<bool> frozen;
+  final Value<bool> questDone;
   const DailyActivityCompanion({
     this.day = const Value.absent(),
     this.lockedSeconds = const Value.absent(),
     this.aura = const Value.absent(),
     this.qualified = const Value.absent(),
     this.frozen = const Value.absent(),
+    this.questDone = const Value.absent(),
   });
   DailyActivityCompanion.insert({
     this.day = const Value.absent(),
@@ -852,6 +1221,7 @@ class DailyActivityCompanion extends UpdateCompanion<DayRow> {
     this.aura = const Value.absent(),
     this.qualified = const Value.absent(),
     this.frozen = const Value.absent(),
+    this.questDone = const Value.absent(),
   });
   static Insertable<DayRow> custom({
     Expression<int>? day,
@@ -859,6 +1229,7 @@ class DailyActivityCompanion extends UpdateCompanion<DayRow> {
     Expression<int>? aura,
     Expression<bool>? qualified,
     Expression<bool>? frozen,
+    Expression<bool>? questDone,
   }) {
     return RawValuesInsertable({
       if (day != null) 'day': day,
@@ -866,6 +1237,7 @@ class DailyActivityCompanion extends UpdateCompanion<DayRow> {
       if (aura != null) 'aura': aura,
       if (qualified != null) 'qualified': qualified,
       if (frozen != null) 'frozen': frozen,
+      if (questDone != null) 'quest_done': questDone,
     });
   }
 
@@ -875,6 +1247,7 @@ class DailyActivityCompanion extends UpdateCompanion<DayRow> {
     Value<int>? aura,
     Value<bool>? qualified,
     Value<bool>? frozen,
+    Value<bool>? questDone,
   }) {
     return DailyActivityCompanion(
       day: day ?? this.day,
@@ -882,6 +1255,7 @@ class DailyActivityCompanion extends UpdateCompanion<DayRow> {
       aura: aura ?? this.aura,
       qualified: qualified ?? this.qualified,
       frozen: frozen ?? this.frozen,
+      questDone: questDone ?? this.questDone,
     );
   }
 
@@ -903,6 +1277,9 @@ class DailyActivityCompanion extends UpdateCompanion<DayRow> {
     if (frozen.present) {
       map['frozen'] = Variable<bool>(frozen.value);
     }
+    if (questDone.present) {
+      map['quest_done'] = Variable<bool>(questDone.value);
+    }
     return map;
   }
 
@@ -913,7 +1290,8 @@ class DailyActivityCompanion extends UpdateCompanion<DayRow> {
           ..write('lockedSeconds: $lockedSeconds, ')
           ..write('aura: $aura, ')
           ..write('qualified: $qualified, ')
-          ..write('frozen: $frozen')
+          ..write('frozen: $frozen, ')
+          ..write('questDone: $questDone')
           ..write(')'))
         .toString();
   }
@@ -1542,6 +1920,13 @@ typedef $$SessionsTableCreateCompanionBuilder = SessionsCompanion Function({
   required bool completed,
   required int aura,
   Value<String> mode,
+  Value<String> vibe,
+  Value<int> clutches,
+  Value<bool> passUsed,
+  Value<int> groupSize,
+  Value<bool> squadClean,
+  Value<bool> won,
+  Value<int> questAura,
 });
 typedef $$SessionsTableUpdateCompanionBuilder = SessionsCompanion Function({
   Value<int> id,
@@ -1553,6 +1938,13 @@ typedef $$SessionsTableUpdateCompanionBuilder = SessionsCompanion Function({
   Value<bool> completed,
   Value<int> aura,
   Value<String> mode,
+  Value<String> vibe,
+  Value<int> clutches,
+  Value<bool> passUsed,
+  Value<int> groupSize,
+  Value<bool> squadClean,
+  Value<bool> won,
+  Value<int> questAura,
 });
 
 class $$SessionsTableFilterComposer
@@ -1606,6 +1998,41 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<String> get mode => $composableBuilder(
     column: $table.mode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vibe => $composableBuilder(
+    column: $table.vibe,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get clutches => $composableBuilder(
+    column: $table.clutches,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get passUsed => $composableBuilder(
+    column: $table.passUsed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get groupSize => $composableBuilder(
+    column: $table.groupSize,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get squadClean => $composableBuilder(
+    column: $table.squadClean,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get won => $composableBuilder(
+    column: $table.won,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get questAura => $composableBuilder(
+    column: $table.questAura,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1663,6 +2090,41 @@ class $$SessionsTableOrderingComposer
     column: $table.mode,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get vibe => $composableBuilder(
+    column: $table.vibe,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get clutches => $composableBuilder(
+    column: $table.clutches,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get passUsed => $composableBuilder(
+    column: $table.passUsed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get groupSize => $composableBuilder(
+    column: $table.groupSize,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get squadClean => $composableBuilder(
+    column: $table.squadClean,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get won => $composableBuilder(
+    column: $table.won,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get questAura => $composableBuilder(
+    column: $table.questAura,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SessionsTableAnnotationComposer
@@ -1704,6 +2166,29 @@ class $$SessionsTableAnnotationComposer
 
   GeneratedColumn<String> get mode =>
       $composableBuilder(column: $table.mode, builder: (column) => column);
+
+  GeneratedColumn<String> get vibe =>
+      $composableBuilder(column: $table.vibe, builder: (column) => column);
+
+  GeneratedColumn<int> get clutches =>
+      $composableBuilder(column: $table.clutches, builder: (column) => column);
+
+  GeneratedColumn<bool> get passUsed =>
+      $composableBuilder(column: $table.passUsed, builder: (column) => column);
+
+  GeneratedColumn<int> get groupSize =>
+      $composableBuilder(column: $table.groupSize, builder: (column) => column);
+
+  GeneratedColumn<bool> get squadClean => $composableBuilder(
+    column: $table.squadClean,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get won =>
+      $composableBuilder(column: $table.won, builder: (column) => column);
+
+  GeneratedColumn<int> get questAura =>
+      $composableBuilder(column: $table.questAura, builder: (column) => column);
 }
 
 class $$SessionsTableTableManager
@@ -1746,6 +2231,13 @@ class $$SessionsTableTableManager
                 Value<bool> completed = const Value.absent(),
                 Value<int> aura = const Value.absent(),
                 Value<String> mode = const Value.absent(),
+                Value<String> vibe = const Value.absent(),
+                Value<int> clutches = const Value.absent(),
+                Value<bool> passUsed = const Value.absent(),
+                Value<int> groupSize = const Value.absent(),
+                Value<bool> squadClean = const Value.absent(),
+                Value<bool> won = const Value.absent(),
+                Value<int> questAura = const Value.absent(),
               }) => SessionsCompanion(
                 id: id,
                 startedAt: startedAt,
@@ -1756,6 +2248,13 @@ class $$SessionsTableTableManager
                 completed: completed,
                 aura: aura,
                 mode: mode,
+                vibe: vibe,
+                clutches: clutches,
+                passUsed: passUsed,
+                groupSize: groupSize,
+                squadClean: squadClean,
+                won: won,
+                questAura: questAura,
               ),
           createCompanionCallback:
               ({
@@ -1768,6 +2267,13 @@ class $$SessionsTableTableManager
                 required bool completed,
                 required int aura,
                 Value<String> mode = const Value.absent(),
+                Value<String> vibe = const Value.absent(),
+                Value<int> clutches = const Value.absent(),
+                Value<bool> passUsed = const Value.absent(),
+                Value<int> groupSize = const Value.absent(),
+                Value<bool> squadClean = const Value.absent(),
+                Value<bool> won = const Value.absent(),
+                Value<int> questAura = const Value.absent(),
               }) => SessionsCompanion.insert(
                 id: id,
                 startedAt: startedAt,
@@ -1778,6 +2284,13 @@ class $$SessionsTableTableManager
                 completed: completed,
                 aura: aura,
                 mode: mode,
+                vibe: vibe,
+                clutches: clutches,
+                passUsed: passUsed,
+                groupSize: groupSize,
+                squadClean: squadClean,
+                won: won,
+                questAura: questAura,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -1817,6 +2330,7 @@ typedef $$DailyActivityTableCreateCompanionBuilder =
       Value<int> aura,
       Value<bool> qualified,
       Value<bool> frozen,
+      Value<bool> questDone,
     });
 typedef $$DailyActivityTableUpdateCompanionBuilder =
     DailyActivityCompanion Function({
@@ -1825,6 +2339,7 @@ typedef $$DailyActivityTableUpdateCompanionBuilder =
       Value<int> aura,
       Value<bool> qualified,
       Value<bool> frozen,
+      Value<bool> questDone,
     });
 
 class $$DailyActivityTableFilterComposer
@@ -1858,6 +2373,11 @@ class $$DailyActivityTableFilterComposer
 
   ColumnFilters<bool> get frozen => $composableBuilder(
     column: $table.frozen,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get questDone => $composableBuilder(
+    column: $table.questDone,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1895,6 +2415,11 @@ class $$DailyActivityTableOrderingComposer
     column: $table.frozen,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get questDone => $composableBuilder(
+    column: $table.questDone,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$DailyActivityTableAnnotationComposer
@@ -1922,6 +2447,9 @@ class $$DailyActivityTableAnnotationComposer
 
   GeneratedColumn<bool> get frozen =>
       $composableBuilder(column: $table.frozen, builder: (column) => column);
+
+  GeneratedColumn<bool> get questDone =>
+      $composableBuilder(column: $table.questDone, builder: (column) => column);
 }
 
 class $$DailyActivityTableTableManager
@@ -1957,12 +2485,14 @@ class $$DailyActivityTableTableManager
                 Value<int> aura = const Value.absent(),
                 Value<bool> qualified = const Value.absent(),
                 Value<bool> frozen = const Value.absent(),
+                Value<bool> questDone = const Value.absent(),
               }) => DailyActivityCompanion(
                 day: day,
                 lockedSeconds: lockedSeconds,
                 aura: aura,
                 qualified: qualified,
                 frozen: frozen,
+                questDone: questDone,
               ),
           createCompanionCallback:
               ({
@@ -1971,12 +2501,14 @@ class $$DailyActivityTableTableManager
                 Value<int> aura = const Value.absent(),
                 Value<bool> qualified = const Value.absent(),
                 Value<bool> frozen = const Value.absent(),
+                Value<bool> questDone = const Value.absent(),
               }) => DailyActivityCompanion.insert(
                 day: day,
                 lockedSeconds: lockedSeconds,
                 aura: aura,
                 qualified: qualified,
                 frozen: frozen,
+                questDone: questDone,
               ),
           withReferenceMapper: (p0) => p0
               .map(

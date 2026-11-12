@@ -45,10 +45,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('pick your blob 👀', style: text.headlineLarge?.copyWith(color: Colors.white)),
+                Text(
+                  'pick your blob 👀',
+                  style: text.headlineLarge?.copyWith(color: Colors.white),
+                ),
                 const SizedBox(height: 4),
-                Text('it cracks when you touch your phone.',
-                    style: text.bodyLarge?.copyWith(color: Colors.white.withValues(alpha: 0.85))),
+                Text(
+                  'it cracks when you touch your phone.',
+                  style: text.bodyLarge?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
               ],
             ),
           ),
@@ -74,9 +81,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
                       decoration: BoxDecoration(
-                        color: _avatar == a.id ? LockColors.blueSoft : Colors.white,
+                        color: _avatar == a.id
+                            ? LockColors.blueSoft
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(LockRadius.card),
-                        border: Border.all(color: _avatar == a.id ? LockColors.blue : LockColors.line, width: 3),
+                        border: Border.all(
+                          color: _avatar == a.id
+                              ? LockColors.blue
+                              : LockColors.line,
+                          width: 3,
+                        ),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -84,7 +98,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           BlobAvatar(
                             avatarId: a.id,
                             size: 100,
-                            mood: _avatar == a.id ? BlobMood.happy : BlobMood.idle,
+                            mood: _avatar == a.id
+                                ? BlobMood.happy
+                                : BlobMood.idle,
                             animate: _avatar == a.id,
                           ),
                           Text(a.name, style: text.titleMedium),
@@ -101,7 +117,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: FilledButton(
-              onPressed: _avatar == null ? null : () => setState(() => _naming = true),
+              onPressed: _avatar == null
+                  ? null
+                  : () => setState(() => _naming = true),
               child: const Text('next'),
             ),
           ),
@@ -130,14 +148,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 const Spacer(),
                 ChatBubble(text: "hi! I'm ${avatar.name} 👋"),
-                BlobAvatar(avatarId: avatar.id, size: 190, mood: BlobMood.happy),
+                BlobAvatar(
+                  avatarId: avatar.id,
+                  size: 190,
+                  mood: BlobMood.happy,
+                ),
                 const SizedBox(height: 8),
-                Text("you'll be", style: text.bodyLarge?.copyWith(color: Colors.white.withValues(alpha: 0.85))),
+                Text(
+                  "you'll be",
+                  style: text.bodyLarge?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
                 Semantics(
                   liveRegion: true,
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
-                    transitionBuilder: (c, a) => ScaleTransition(scale: a, child: c),
+                    transitionBuilder: (c, a) =>
+                        ScaleTransition(scale: a, child: c),
                     child: Text(
                       nicknameFor(_nickname),
                       key: ValueKey(_nickname),
@@ -179,7 +207,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 const SizedBox(height: 12),
                 FilledButton(
                   onPressed: () async {
-                    await ref.read(profileProvider.notifier).create(avatarId: avatar.id, nicknameId: _nickname);
+                    await ref
+                        .read(profileProvider.notifier)
+                        .create(avatarId: avatar.id, nicknameId: _nickname);
                     if (mounted) context.go('/');
                   },
                   child: const Text("let's go"),

@@ -30,12 +30,14 @@ Future<void> main() async {
     await DeviceBridge().stopSession();
   }
 
-  runApp(ProviderScope(
-    overrides: [
-      prefsProvider.overrideWithValue(prefs),
-      dbProvider.overrideWithValue(db),
-      interruptedAtLaunchProvider.overrideWithValue(interrupted),
-    ],
-    child: const LockInApp(),
-  ));
+  runApp(
+    ProviderScope(
+      overrides: [
+        prefsProvider.overrideWithValue(prefs),
+        dbProvider.overrideWithValue(db),
+        interruptedAtLaunchProvider.overrideWithValue(interrupted),
+      ],
+      child: const LockInApp(),
+    ),
+  );
 }

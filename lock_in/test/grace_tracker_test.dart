@@ -5,11 +5,8 @@ void main() {
   final t0 = DateTime.utc(2026, 11, 11, 12);
   DateTime at(int s) => t0.add(Duration(seconds: s));
 
-  GraceTracker faceDown() => GraceTracker(
-        armedAt: t0,
-        initiallyActive: true,
-        initiallyCovered: true,
-      );
+  GraceTracker faceDown() =>
+      GraceTracker(armedAt: t0, initiallyActive: true, initiallyCovered: true);
 
   test('face down and untouched: no events', () {
     final g = faceDown();
@@ -20,8 +17,10 @@ void main() {
 
   test('picked up and put back within grace: cancelled, no crack', () {
     final g = faceDown()..arm();
-    expect(g.onSignal(DeviceSignal.proximityUncovered, at(60)).single,
-        isA<GraceStarted>());
+    expect(
+      g.onSignal(DeviceSignal.proximityUncovered, at(60)).single,
+      isA<GraceStarted>(),
+    );
     final ev = g.onSignal(DeviceSignal.proximityCovered, at(65)).single;
     expect(ev, isA<GraceCancelled>());
     expect((ev as GraceCancelled).after, const Duration(seconds: 5));
@@ -29,28 +28,36 @@ void main() {
     expect(g.crackCount, 0);
   });
 
-  test('picked up for longer than grace: one crack, timestamped at deadline', () {
-    final g = faceDown()..arm();
-    g.onSignal(DeviceSignal.proximityUncovered, at(60));
-    expect(g.tick(at(69)), isEmpty);
-    final ev = g.tick(at(70)).single as Cracked;
-    expect(ev.at, at(70));
-    expect(ev.noticedLate, isFalse);
-    // Staying up does not crack again.
-    expect(g.tick(at(200)), isEmpty);
-    expect(g.crackCount, 1);
-  });
+  test(
+    'picked up for longer than grace: one crack, timestamped at deadline',
+    () {
+      final g = faceDown()..arm();
+      g.onSignal(DeviceSignal.proximityUncovered, at(60));
+      expect(g.tick(at(69)), isEmpty);
+      final ev = g.tick(at(70)).single as Cracked;
+      expect(ev.at, at(70));
+      expect(ev.noticedLate, isFalse);
+      // Staying up does not crack again.
+      expect(g.tick(at(200)), isEmpty);
+      expect(g.crackCount, 1);
+    },
+  );
 
-  test('after a crack, putting it down re-arms; a second pickup cracks again', () {
-    final g = faceDown()..arm();
-    g.onSignal(DeviceSignal.proximityUncovered, at(10));
-    g.tick(at(20));
-    expect(g.onSignal(DeviceSignal.proximityCovered, at(30)).single,
-        isA<Rearmed>());
-    g.onSignal(DeviceSignal.proximityUncovered, at(40));
-    g.tick(at(50));
-    expect(g.crackCount, 2);
-  });
+  test(
+    'after a crack, putting it down re-arms; a second pickup cracks again',
+    () {
+      final g = faceDown()..arm();
+      g.onSignal(DeviceSignal.proximityUncovered, at(10));
+      g.tick(at(20));
+      expect(
+        g.onSignal(DeviceSignal.proximityCovered, at(30)).single,
+        isA<Rearmed>(),
+      );
+      g.onSignal(DeviceSignal.proximityUncovered, at(40));
+      g.tick(at(50));
+      expect(g.crackCount, 2);
+    },
+  );
 
   test('pressing the side button (inactive then locked) is not a crack', () {
     final g = faceDown()..arm();
@@ -70,8 +77,11 @@ void main() {
   });
 
   test('crack noticed late (app was suspended) keeps the true time', () {
-    final g = GraceTracker(armedAt: t0, initiallyActive: false, initiallyLocked: true)
-      ..arm();
+    final g = GraceTracker(
+      armedAt: t0,
+      initiallyActive: false,
+      initiallyLocked: true,
+    )..arm();
     // Unlock is only delivered when the app wakes much later.
     g.onSignal(DeviceSignal.deviceUnlocked, at(300));
     final out = g.onSignal(DeviceSignal.appActive, at(400));

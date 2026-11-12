@@ -20,6 +20,15 @@ class Sessions extends Table {
 
   /// solo | group | migrated
   TextColumn get mode => text().withDefault(const Constant('solo'))();
+
+  // v2
+  TextColumn get vibe => text().withDefault(const Constant('study'))();
+  IntColumn get clutches => integer().withDefault(const Constant(0))();
+  BoolColumn get passUsed => boolean().withDefault(const Constant(false))();
+  IntColumn get groupSize => integer().withDefault(const Constant(1))();
+  BoolColumn get squadClean => boolean().withDefault(const Constant(false))();
+  BoolColumn get won => boolean().withDefault(const Constant(false))();
+  IntColumn get questAura => integer().withDefault(const Constant(0))();
 }
 
 @DataClassName('DayRow')
@@ -32,6 +41,9 @@ class DailyActivity extends Table {
 
   /// Missed day covered by a streak freeze.
   BoolColumn get frozen => boolean().withDefault(const Constant(false))();
+
+  // v2
+  BoolColumn get questDone => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {day};
@@ -61,8 +73,29 @@ class UnlockedSkins extends Table {
 
 @DriftDatabase(tables: [Sessions, DailyActivity, StreakStates, UnlockedSkins])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'lockin'));
+  AppDatabase([QueryExecutor? executor])
+    : super(executor ?? driftDatabase(name: 'lockin'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        for (final c in [
+          sessions.vibe,
+          sessions.clutches,
+          sessions.passUsed,
+          sessions.groupSize,
+          sessions.squadClean,
+          sessions.won,
+          sessions.questAura,
+        ]) {
+          await m.addColumn(sessions, c);
+        }
+        await m.addColumn(dailyActivity, dailyActivity.questDone);
+      }
+    },
+  );
 }

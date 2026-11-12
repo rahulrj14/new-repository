@@ -27,11 +27,21 @@ class StreakTab extends ConsumerWidget {
               child: Column(
                 children: [
                   Text('🔥', style: text.displayMedium),
-                  Text('${s.days}', style: text.displayLarge?.copyWith(color: Colors.white)),
-                  Text(s.days == 1 ? 'day streak' : 'day streak', style: text.titleLarge?.copyWith(color: Colors.white)),
+                  Text(
+                    '${s.days}',
+                    style: text.displayLarge?.copyWith(color: Colors.white),
+                  ),
+                  Text(
+                    s.days == 1 ? 'day streak' : 'day streak',
+                    style: text.titleLarge?.copyWith(color: Colors.white),
+                  ),
                   const SizedBox(height: 6),
-                  Text('best: ${s.longest} ${s.longest == 1 ? 'day' : 'days'}',
-                      style: text.bodyLarge?.copyWith(color: Colors.white.withValues(alpha: 0.8))),
+                  Text(
+                    'best: ${s.longest} ${s.longest == 1 ? 'day' : 'days'}',
+                    style: text.bodyLarge?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -51,9 +61,14 @@ class StreakTab extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('${s.freezes} / $maxFreezes freezes', style: text.titleLarge),
-                          Text('earn one every $freezeEvery days. it covers a missed day automatically.',
-                              style: text.bodyMedium),
+                          Text(
+                            '${s.freezes} / $maxFreezes freezes',
+                            style: text.titleLarge,
+                          ),
+                          Text(
+                            'earn one every $freezeEvery days. it covers a missed day automatically.',
+                            style: text.bodyMedium,
+                          ),
                         ],
                       ),
                     ),
@@ -89,7 +104,10 @@ class StreakTab extends ConsumerWidget {
                     Text('how it works', style: text.titleLarge),
                     const SizedBox(height: 10),
                     for (final (e, line) in const [
-                      ('⏱️', 'lock in $qualifyingMinutes min in a day. short sessions add up.'),
+                      (
+                        '⏱️',
+                        'lock in $qualifyingMinutes min in a day. short sessions add up.',
+                      ),
                       ('❄️', 'miss a day? a freeze saves it.'),
                       ('🤫', 'no reminders, no guilt trips. just vibes.'),
                     ])
@@ -123,45 +141,62 @@ class _MonthGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final first = today - 27;
-    return LayoutBuilder(builder: (context, c) {
-      const gap = 8.0;
-      final cell = (c.maxWidth - gap * 6) / 7;
-      return Wrap(
-        spacing: gap,
-        runSpacing: gap,
-        children: [
-          for (var d = first; d <= today; d++)
-            Builder(builder: (context) {
-              final row = days[d];
-              final done = row?.qualified == true;
-              final frozen = row?.frozen == true;
-              final date = dayFromNumber(d);
-              return Semantics(
-                label: '${date.day}/${date.month}: ${done ? 'locked in' : frozen ? 'frozen' : 'no streak'}',
-                excludeSemantics: true,
-                child: Container(
-                  width: cell,
-                  height: cell,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: done ? LockColors.blue : frozen ? LockColors.ice : LockColors.bg,
-                    borderRadius: BorderRadius.circular(10),
-                    border: d == today ? Border.all(color: LockColors.blue, width: 2) : null,
-                  ),
-                  child: Text(
-                    '${date.day}',
-                    style: TextStyle(
-                      fontFamily: kFont,
-                      fontWeight: FontWeight.w600,
-                      color: done || frozen ? Colors.white : LockColors.muted,
+    return LayoutBuilder(
+      builder: (context, c) {
+        const gap = 8.0;
+        final cell = (c.maxWidth - gap * 6) / 7;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (var d = first; d <= today; d++)
+              Builder(
+                builder: (context) {
+                  final row = days[d];
+                  final done = row?.qualified == true;
+                  final frozen = row?.frozen == true;
+                  final date = dayFromNumber(d);
+                  return Semantics(
+                    label:
+                        '${date.day}/${date.month}: ${done
+                            ? 'locked in'
+                            : frozen
+                            ? 'frozen'
+                            : 'no streak'}',
+                    excludeSemantics: true,
+                    child: Container(
+                      width: cell,
+                      height: cell,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: done
+                            ? LockColors.blue
+                            : frozen
+                            ? LockColors.ice
+                            : LockColors.bg,
+                        borderRadius: BorderRadius.circular(10),
+                        border: d == today
+                            ? Border.all(color: LockColors.blue, width: 2)
+                            : null,
+                      ),
+                      child: Text(
+                        '${date.day}',
+                        style: TextStyle(
+                          fontFamily: kFont,
+                          fontWeight: FontWeight.w600,
+                          color: done || frozen
+                              ? Colors.white
+                              : LockColors.muted,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              );
-            }),
-        ],
-      );
-    });
+                  );
+                },
+              ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -175,7 +210,14 @@ class _Legend extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(width: 14, height: 14, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4))),
+        Container(
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
         const SizedBox(width: 6),
         Text(label, style: Theme.of(context).textTheme.bodyMedium),
       ],

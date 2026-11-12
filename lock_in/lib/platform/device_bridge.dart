@@ -10,14 +10,14 @@ class DeviceEvent {
   final DateTime at;
 
   DeviceSignal? get signal => switch (name) {
-        'appActive' => DeviceSignal.appActive,
-        'appInactive' => DeviceSignal.appInactive,
-        'deviceLocked' => DeviceSignal.deviceLocked,
-        'deviceUnlocked' => DeviceSignal.deviceUnlocked,
-        'proximityCovered' => DeviceSignal.proximityCovered,
-        'proximityUncovered' => DeviceSignal.proximityUncovered,
-        _ => null,
-      };
+    'appActive' => DeviceSignal.appActive,
+    'appInactive' => DeviceSignal.appInactive,
+    'deviceLocked' => DeviceSignal.deviceLocked,
+    'deviceUnlocked' => DeviceSignal.deviceUnlocked,
+    'proximityCovered' => DeviceSignal.proximityCovered,
+    'proximityUncovered' => DeviceSignal.proximityUncovered,
+    _ => null,
+  };
 }
 
 /// Thin wrapper over the platform channel. Every call is safe on platforms
@@ -26,18 +26,26 @@ class DeviceBridge {
   static const _methods = MethodChannel('lockin/device_use');
   static const _events = EventChannel('lockin/device_use/events');
 
-  late final Stream<DeviceEvent> events = _events.receiveBroadcastStream().map((e) {
-    final m = Map<String, Object?>.from(e as Map);
-    return DeviceEvent(
-      m['signal'] as String,
-      DateTime.fromMillisecondsSinceEpoch((m['t'] as num).toInt()),
-    );
-  }).handleError((Object _) {});
+  late final Stream<DeviceEvent> events = _events
+      .receiveBroadcastStream()
+      .map((e) {
+        final m = Map<String, Object?>.from(e as Map);
+        return DeviceEvent(
+          m['signal'] as String,
+          DateTime.fromMillisecondsSinceEpoch((m['t'] as num).toInt()),
+        );
+      })
+      .handleError((Object _) {});
 
-  Future<void> startSession({required DateTime startAt, DateTime? endAt}) => _call('startSession', {
-        'startAt': startAt.millisecondsSinceEpoch,
-        'endAt': endAt?.millisecondsSinceEpoch ?? 0,
-      });
+  Future<void> startSession({
+    required DateTime startAt,
+    DateTime? endAt,
+    bool group = false,
+  }) => _call('startSession', {
+    'startAt': startAt.millisecondsSinceEpoch,
+    'endAt': endAt?.millisecondsSinceEpoch ?? 0,
+    'group': group,
+  });
 
   Future<void> updateNotification(String title, String text) =>
       _call('updateNotification', {'title': title, 'text': text});
@@ -49,7 +57,9 @@ class DeviceBridge {
 
   Future<Map<String, Object?>> snapshot() async {
     try {
-      return Map<String, Object?>.from(await _methods.invokeMethod<Map>('snapshot') ?? {});
+      return Map<String, Object?>.from(
+        await _methods.invokeMethod<Map>('snapshot') ?? {},
+      );
     } on MissingPluginException {
       return {};
     } on PlatformException {

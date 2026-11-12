@@ -5,6 +5,13 @@ import 'package:material_ui/material_ui.dart';
 import '../../catalog/avatars.dart';
 import '../../catalog/nicknames.dart';
 import '../../catalog/skins.dart';
+import '../../catalog/stickers.dart';
+import '../../progression/stages.dart';
+import '../../share/share_util.dart';
+import '../widgets/sticker.dart';
+
+import 'package:go_router/go_router.dart';
+
 import '../../platform/device_bridge.dart';
 import '../../storage/db.dart';
 import '../../storage/profile_store.dart';
@@ -28,7 +35,9 @@ class _MeTabState extends ConsumerState<MeTab> {
     super.initState();
     _newOnOpen = {...ref.read(progressValueProvider).unseenSkins};
     if (_newOnOpen.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(progressProvider.notifier).markSkinsSeen());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => ref.read(progressProvider.notifier).markSkinsSeen(),
+      );
     }
   }
 
@@ -49,10 +58,23 @@ class _MeTabState extends ConsumerState<MeTab> {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             child: Column(
               children: [
-                BlobAvatar(avatarId: profile.avatarId, skinId: profile.skinId, size: 140, mood: BlobMood.happy),
-                Text(nicknameFor(profile.nicknameId), style: text.headlineMedium?.copyWith(color: Colors.white)),
-                Text('LV ${level.number} · ${level.name}',
-                    style: text.titleMedium?.copyWith(color: Colors.white.withValues(alpha: 0.85))),
+                BlobAvatar(
+                  avatarId: profile.avatarId,
+                  skinId: profile.skinId,
+                  stage: p.stage.index,
+                  size: 140,
+                  mood: BlobMood.happy,
+                ),
+                Text(
+                  nicknameFor(profile.nicknameId),
+                  style: text.headlineMedium?.copyWith(color: Colors.white),
+                ),
+                Text(
+                  'LV ${level.number} · ${level.name}',
+                  style: text.titleMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
               ],
             ),
           ),
@@ -64,16 +86,59 @@ class _MeTabState extends ConsumerState<MeTab> {
             children: [
               Row(
                 children: [
-                  StatTile(value: '${p.auraTotal}', label: 'aura', color: LockColors.blue),
+                  StatTile(
+                    value: '${p.auraTotal}',
+                    label: 'aura',
+                    color: LockColors.blue,
+                  ),
                   const SizedBox(width: 10),
                   StatTile(value: '${p.sessions}', label: 'sessions'),
                   const SizedBox(width: 10),
                   StatTile(value: '${p.streak.longest}', label: 'best streak'),
                 ],
               ),
+              const SizedBox(height: 12),
+              _StageCard(minutes: p.lifetimeMinutes),
+              const SizedBox(height: 12),
+              LockCard(
+                color: const Color(0xFF1C1F3B),
+                onTap: () => context.push('/wrapped'),
+                child: Row(
+                  children: [
+                    const Text('✨', style: TextStyle(fontSize: 30)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Lock In Wrapped',
+                            style: text.titleLarge?.copyWith(
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            'your ${DateTime.now().year} so far, made for sharing',
+                            style: text.bodyMedium?.copyWith(
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 22),
               Text('skins', style: text.titleLarge),
-              Text('earned by keeping your phone down. tap to wear.', style: text.bodyMedium),
+              Text(
+                'earned by keeping your phone down. tap to wear.',
+                style: text.bodyMedium,
+              ),
               const SizedBox(height: 10),
               GridView.count(
                 crossAxisCount: 3,
@@ -87,7 +152,9 @@ class _MeTabState extends ConsumerState<MeTab> {
                     _SkinTile(
                       skin: s,
                       avatarId: profile.avatarId,
-                      unlocked: p.unlockedSkins.contains(s.id) || isUnlocked(s, p.unlockStats),
+                      unlocked:
+                          p.unlockedSkins.contains(s.id) ||
+                          isUnlocked(s, p.unlockStats),
                       equipped: profile.skinId == s.id,
                       isNew: _newOnOpen.contains(s.id),
                       onTap: (unlocked) {
@@ -97,8 +164,79 @@ class _MeTabState extends ConsumerState<MeTab> {
                         } else {
                           ScaffoldMessenger.of(context)
                             ..hideCurrentSnackBar()
-                            ..showSnackBar(SnackBar(content: Text('🔒 ${s.name}: ${s.requirement}')));
+                            ..showSnackBar(
+                              SnackBar(
+                                content: Text('🔒 ${s.name}: ${s.requirement}'),
+                              ),
+                            );
                         }
+                      },
+                    ),
+                ],
+              ),
+              const SizedBox(height: 22),
+              Text('stickers', style: text.titleLarge),
+              Text(
+                'your blob, your reactions. tap to send anywhere.',
+                style: text.bodyMedium,
+              ),
+              const SizedBox(height: 10),
+              GridView.count(
+                crossAxisCount: 4,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                children: [
+                  for (final st in stickers)
+                    Builder(
+                      builder: (context) {
+                        final got = p.unlockedStickers.contains(st.id);
+                        return Semantics(
+                          button: true,
+                          label: got
+                              ? '${st.label} sticker. Tap to share.'
+                              : '${st.label} sticker, locked: ${st.requirement}',
+                          excludeSemantics: true,
+                          child: GestureDetector(
+                            onTap: () {
+                              if (got) {
+                                _shareSticker(context, st, profile.avatarId, profile.skinId);
+                              } else {
+                                ScaffoldMessenger.of(context)
+                                  ..hideCurrentSnackBar()
+                                  ..showSnackBar(
+                                    SnackBar(content: Text('🔒 ${st.label}: ${st.requirement}')),
+                                  );
+                              }
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: LockColors.line,
+                                  width: 2,
+                                ),
+                              ),
+                              padding: const EdgeInsets.all(4),
+                              child: got
+                                  ? FittedBox(
+                                      child: BlobSticker(
+                                        sticker: st,
+                                        avatarId: profile.avatarId,
+                                        skinId: profile.skinId,
+                                      ),
+                                    )
+                                  : const Center(
+                                      child: Text(
+                                        '🔒',
+                                        style: TextStyle(fontSize: 24),
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        );
                       },
                     ),
                 ],
@@ -118,7 +256,9 @@ class _MeTabState extends ConsumerState<MeTab> {
                         label: a.name,
                         excludeSemantics: true,
                         child: GestureDetector(
-                          onTap: () => ref.read(profileProvider.notifier).setAvatar(a.id),
+                          onTap: () => ref
+                              .read(profileProvider.notifier)
+                              .setAvatar(a.id),
                           child: Container(
                             margin: const EdgeInsets.only(right: 8),
                             padding: const EdgeInsets.all(4),
@@ -126,9 +266,17 @@ class _MeTabState extends ConsumerState<MeTab> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                  color: profile.avatarId == a.id ? LockColors.blue : LockColors.line, width: 2),
+                                color: profile.avatarId == a.id
+                                    ? LockColors.blue
+                                    : LockColors.line,
+                                width: 2,
+                              ),
                             ),
-                            child: BlobAvatar(avatarId: a.id, size: 70, animate: false),
+                            child: BlobAvatar(
+                              avatarId: a.id,
+                              size: 70,
+                              animate: false,
+                            ),
                           ),
                         ),
                       ),
@@ -139,7 +287,12 @@ class _MeTabState extends ConsumerState<MeTab> {
               Text('history', style: text.titleLarge),
               const SizedBox(height: 10),
               if (p.recent.isEmpty)
-                LockCard(child: Text('no sessions yet. your first one goes here ✨', style: text.bodyLarge))
+                LockCard(
+                  child: Text(
+                    'no sessions yet. your first one goes here ✨',
+                    style: text.bodyLarge,
+                  ),
+                )
               else
                 LockCard(
                   padding: const EdgeInsets.symmetric(vertical: 4),
@@ -164,14 +317,25 @@ class _MeTabState extends ConsumerState<MeTab> {
                     SwitchListTile(
                       title: Text('reduce motion', style: text.titleMedium),
                       value: settings.reduceMotion,
-                      onChanged: ref.read(settingsProvider.notifier).setReduceMotion,
+                      onChanged: ref
+                          .read(settingsProvider.notifier)
+                          .setReduceMotion,
                     ),
                     ListTile(
-                      title: Text('keep sessions alive', style: text.titleMedium),
-                      subtitle: Text('battery saver → no restrictions (Xiaomi, Samsung, OnePlus)',
-                          style: text.bodyMedium),
-                      trailing: const Icon(Icons.chevron_right_rounded, color: LockColors.muted),
-                      onTap: () => ref.read(deviceBridgeProvider).openAppSettings(),
+                      title: Text(
+                        'keep sessions alive',
+                        style: text.titleMedium,
+                      ),
+                      subtitle: Text(
+                        'battery saver → no restrictions (Xiaomi, Samsung, OnePlus)',
+                        style: text.bodyMedium,
+                      ),
+                      trailing: const Icon(
+                        Icons.chevron_right_rounded,
+                        color: LockColors.muted,
+                      ),
+                      onTap: () =>
+                          ref.read(deviceBridgeProvider).openAppSettings(),
                     ),
                   ],
                 ),
@@ -189,6 +353,84 @@ class _MeTabState extends ConsumerState<MeTab> {
           ),
         ),
       ],
+    );
+  }
+}
+
+void _shareSticker(BuildContext context, Sticker st, int avatarId, int skinId) {
+  final key = GlobalKey();
+  showModalBottomSheet<void>(
+    context: context,
+    builder: (sheet) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RepaintBoundary(
+              key: key,
+              child: BlobSticker(
+                sticker: st,
+                avatarId: avatarId,
+                skinId: skinId,
+                size: 200,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: () async {
+                // 200 logical px × 2.56 ≈ 512 px, a standard sticker size.
+                await sharePng(key, pixelRatio: 2.56, name: 'lock-in-sticker');
+                if (sheet.mounted) Navigator.pop(sheet);
+              },
+              icon: const Icon(Icons.ios_share_rounded),
+              label: const Text('send sticker'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _StageCard extends StatelessWidget {
+  const _StageCard({required this.minutes});
+  final int minutes;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final st = stageFor(minutes);
+    final next = nextStage(st);
+    final progress = next == null
+        ? 1.0
+        : (minutes - st.minutes) / (next.minutes - st.minutes);
+    return LockCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text('🌱 ${st.name} blob', style: text.titleLarge),
+              ),
+              Text(
+                '${(minutes / 60).toStringAsFixed(minutes < 600 ? 1 : 0)} h locked',
+                style: text.bodyMedium,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            next == null
+                ? 'fully grown. legendary.'
+                : 'grows into ${next.name} at ${next.minutes ~/ 60} h',
+            style: text.bodyMedium,
+          ),
+          const SizedBox(height: 10),
+          FatBar(value: progress, color: const Color(0xFF8B6CFF)),
+        ],
+      ),
     );
   }
 }
@@ -215,7 +457,8 @@ class _SkinTile extends StatelessWidget {
     return Semantics(
       button: true,
       selected: equipped,
-      label: '${skin.name}. ${unlocked ? (equipped ? 'Wearing' : 'Unlocked') : 'Locked: ${skin.requirement}'}',
+      label:
+          '${skin.name}. ${unlocked ? (equipped ? 'Wearing' : 'Unlocked') : 'Locked: ${skin.requirement}'}',
       excludeSemantics: true,
       child: GestureDetector(
         onTap: () => onTap(unlocked),
@@ -223,7 +466,10 @@ class _SkinTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: equipped ? LockColors.blue : LockColors.line, width: equipped ? 3 : 2),
+            border: Border.all(
+              color: equipped ? LockColors.blue : LockColors.line,
+              width: equipped ? 3 : 2,
+            ),
           ),
           child: Stack(
             children: [
@@ -233,11 +479,23 @@ class _SkinTile extends StatelessWidget {
                   children: [
                     Opacity(
                       opacity: unlocked ? 1 : 0.35,
-                      child: BlobAvatar(avatarId: avatarId, skinId: skin.id, size: 72, animate: false),
+                      child: BlobAvatar(
+                        avatarId: avatarId,
+                        skinId: skin.id,
+                        size: 72,
+                        animate: false,
+                      ),
                     ),
-                    Text(skin.name, style: text.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
                     Text(
-                      unlocked ? (equipped ? 'wearing' : 'tap to wear') : '🔒 ${skin.requirement}',
+                      skin.name,
+                      style: text.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      unlocked
+                          ? (equipped ? 'wearing' : 'tap to wear')
+                          : '🔒 ${skin.requirement}',
                       style: text.bodyMedium?.copyWith(
                         fontSize: 12,
                         color: equipped ? LockColors.blue : LockColors.muted,
@@ -254,10 +512,23 @@ class _SkinTile extends StatelessWidget {
                   top: 8,
                   right: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(color: LockColors.coral, borderRadius: BorderRadius.circular(LockRadius.pill)),
-                    child: const Text('new',
-                        style: TextStyle(fontFamily: kFont, color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: LockColors.coral,
+                      borderRadius: BorderRadius.circular(LockRadius.pill),
+                    ),
+                    child: const Text(
+                      'new',
+                      style: TextStyle(
+                        fontFamily: kFont,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -275,19 +546,40 @@ class _HistoryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     final d = r.startedAt;
-    final when = '${d.day} ${months[d.month - 1]} · ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    final when =
+        '${d.day} ${months[d.month - 1]} · ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
     final mins = r.lockedSeconds ~/ 60;
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: r.cracks == 0 ? LockColors.blueSoft : LockColors.coral.withValues(alpha: 0.12),
+        backgroundColor: r.cracks == 0
+            ? LockColors.blueSoft
+            : LockColors.coral.withValues(alpha: 0.12),
         child: Text(r.cracks == 0 ? '🔒' : '💔'),
       ),
-      title: Text('$mins min locked${r.cracks > 0 ? ' · ${r.cracks} crack${r.cracks == 1 ? '' : 's'}' : ''}',
-          style: text.titleMedium),
+      title: Text(
+        '$mins min locked${r.cracks > 0 ? ' · ${r.cracks} crack${r.cracks == 1 ? '' : 's'}' : ''}',
+        style: text.titleMedium,
+      ),
       subtitle: Text(when, style: text.bodyMedium),
-      trailing: Text('+${r.aura} ✦', style: text.titleMedium?.copyWith(color: LockColors.blue)),
+      trailing: Text(
+        '+${r.aura} ✦',
+        style: text.titleMedium?.copyWith(color: LockColors.blue),
+      ),
     );
   }
 }

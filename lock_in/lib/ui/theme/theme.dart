@@ -3,21 +3,35 @@ import 'package:material_ui/material_ui.dart';
 import 'tokens.dart';
 
 ThemeData buildTheme() {
-  final scheme = ColorScheme.fromSeed(seedColor: LockColors.blue, brightness: Brightness.light).copyWith(
-    primary: LockColors.blue,
-    onPrimary: Colors.white,
-    surface: LockColors.bg,
-    onSurface: LockColors.ink,
-    error: LockColors.coral,
-  );
+  final scheme =
+      ColorScheme.fromSeed(
+        seedColor: LockColors.blue,
+        brightness: Brightness.light,
+      ).copyWith(
+        primary: LockColors.blue,
+        onPrimary: Colors.white,
+        surface: LockColors.bg,
+        onSurface: LockColors.ink,
+        error: LockColors.coral,
+      );
   final base = ThemeData(
     colorScheme: scheme,
     useMaterial3: true,
     fontFamily: kFont,
     scaffoldBackgroundColor: LockColors.bg,
   );
-  TextStyle t(double size, FontWeight w, {double height = 1.15, Color color = LockColors.ink}) =>
-      TextStyle(fontFamily: kFont, fontSize: size, fontWeight: w, height: height, color: color);
+  TextStyle t(
+    double size,
+    FontWeight w, {
+    double height = 1.15,
+    Color color = LockColors.ink,
+  }) => TextStyle(
+    fontFamily: kFont,
+    fontSize: size,
+    fontWeight: w,
+    height: height,
+    color: color,
+  );
   return base.copyWith(
     textTheme: base.textTheme.copyWith(
       displayLarge: t(88, FontWeight.w700, height: 1),
@@ -36,7 +50,9 @@ ThemeData buildTheme() {
         foregroundColor: Colors.white,
         disabledBackgroundColor: LockColors.line,
         minimumSize: const Size.fromHeight(60),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(LockRadius.button)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(LockRadius.button),
+        ),
         textStyle: t(19, FontWeight.w700, color: Colors.white),
         elevation: 0,
       ),
@@ -47,7 +63,9 @@ ThemeData buildTheme() {
         backgroundColor: Colors.white,
         minimumSize: const Size.fromHeight(56),
         side: const BorderSide(color: LockColors.blueSoft, width: 2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(LockRadius.button)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(LockRadius.button),
+        ),
         textStyle: t(17, FontWeight.w700),
       ),
     ),
@@ -63,25 +81,40 @@ ThemeData buildTheme() {
       indicatorColor: LockColors.blueSoft,
       height: 72,
       elevation: 0,
-      labelTextStyle: WidgetStateProperty.resolveWith((s) => t(
-            12,
-            FontWeight.w600,
-            color: s.contains(WidgetState.selected) ? LockColors.blue : LockColors.muted,
-          )),
-      iconTheme: WidgetStateProperty.resolveWith((s) => IconThemeData(
-            size: 26,
-            color: s.contains(WidgetState.selected) ? LockColors.blue : LockColors.muted,
-          )),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (s) => t(
+          12,
+          FontWeight.w600,
+          color: s.contains(WidgetState.selected)
+              ? LockColors.blue
+              : LockColors.muted,
+        ),
+      ),
+      iconTheme: WidgetStateProperty.resolveWith(
+        (s) => IconThemeData(
+          size: 26,
+          color: s.contains(WidgetState.selected)
+              ? LockColors.blue
+              : LockColors.muted,
+        ),
+      ),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
       backgroundColor: Colors.white,
       showDragHandle: true,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(LockRadius.card))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(LockRadius.card),
+        ),
+      ),
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.all(Colors.white),
       trackColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.selected) ? LockColors.blue : LockColors.line),
+        (s) => s.contains(WidgetState.selected)
+            ? LockColors.blue
+            : LockColors.line,
+      ),
       trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
     ),
     snackBarTheme: SnackBarThemeData(

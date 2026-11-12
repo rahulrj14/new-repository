@@ -135,6 +135,15 @@ class LockInService : Service() {
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
             val s = current
             if (s != null && !finished) {
+                // "I genuinely need my phone": one tap from the lock screen.
+                val pass = PendingIntent.getBroadcast(
+                    context, 3,
+                    Intent(context, EmergencyPassReceiver::class.java),
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+                )
+                b.addAction(
+                    Notification.Action.Builder(null, "Emergency pass 🆘", pass).build(),
+                )
                 // The system draws a live timer; no wakeups needed.
                 b.setUsesChronometer(true).setShowWhen(true)
                 if (s.endAt > 0L) {
@@ -182,5 +191,12 @@ class SessionFinishedReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         LockInService.update(context, "Session done ✦", "Unlock to collect your aura.", finished = true)
         DeviceEvents.emit(context, "sessionTimeUp")
+    }
+}
+
+/** The notification's emergency-pass button. */
+class EmergencyPassReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        DeviceEvents.emit(context, "emergencyPass")
     }
 }

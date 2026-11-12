@@ -14,14 +14,18 @@ class HoldButton extends StatefulWidget {
   State<HoldButton> createState() => _HoldButtonState();
 }
 
-class _HoldButtonState extends State<HoldButton> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))
-    ..addStatusListener((s) {
-      if (s == AnimationStatus.completed) {
-        HapticFeedback.heavyImpact();
-        widget.onConfirmed();
-      }
-    });
+class _HoldButtonState extends State<HoldButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c =
+      AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 1100),
+      )..addStatusListener((s) {
+        if (s == AnimationStatus.completed) {
+          HapticFeedback.heavyImpact();
+          widget.onConfirmed();
+        }
+      });
 
   @override
   void dispose() {
@@ -58,9 +62,16 @@ class _HoldButtonState extends State<HoldButton> with SingleTickerProviderStateM
                   FractionallySizedBox(
                     alignment: Alignment.centerLeft,
                     widthFactor: _c.value,
-                    child: Container(color: Colors.white.withValues(alpha: 0.45)),
+                    child: Container(
+                      color: Colors.white.withValues(alpha: 0.45),
+                    ),
                   ),
-                  Center(child: Text(widget.label, style: text.titleMedium?.copyWith(color: Colors.white))),
+                  Center(
+                    child: Text(
+                      widget.label,
+                      style: text.titleMedium?.copyWith(color: Colors.white),
+                    ),
+                  ),
                 ],
               ),
             ),

@@ -54,7 +54,11 @@ void main() {
     });
 
     test('dayNumber is stable across a DST change', () {
-      expect(dayNumber(DateTime(2026, 3, 30, 0, 30)) - dayNumber(DateTime(2026, 3, 29, 23, 30)), 1);
+      expect(
+        dayNumber(DateTime(2026, 3, 30, 0, 30)) -
+            dayNumber(DateTime(2026, 3, 29, 23, 30)),
+        1,
+      );
     });
   });
 
@@ -81,27 +85,38 @@ void main() {
     });
     tearDown(() => db.close());
 
-    Future<SessionOutcome> session(DateTime end, {int minutes = 25, int aura = 30}) => repo.recordSession(
-          startedAt: end.subtract(Duration(minutes: minutes)),
-          endedAt: end,
-          plannedMinutes: minutes,
-          lockedSeconds: minutes * 60,
-          cracks: 0,
-          completed: true,
-          aura: aura,
-        );
+    Future<SessionOutcome> session(
+      DateTime end, {
+      int minutes = 25,
+      int aura = 30,
+    }) => repo.recordSession(
+      startedAt: end.subtract(Duration(minutes: minutes)),
+      endedAt: end,
+      plannedMinutes: minutes,
+      lockedSeconds: minutes * 60,
+      cracks: 0,
+      completed: true,
+      aura: aura,
+    );
 
-    test('first qualifying session starts a streak and unlocks Party', () async {
-      final o = await session(DateTime(2026, 11, 12, 10));
-      expect(o.dayJustQualified, isTrue);
-      expect(o.streakAfter, 1);
-      expect(o.newSkins.map((s) => s.name), contains('Party'));
-      final p = await repo.load(DateTime(2026, 11, 12, 11));
-      expect(p.auraTotal, 30);
-      expect(p.sessions, 1);
-      expect(p.streak.doneToday, isTrue);
-      expect(p.unlockedSkins, containsAll([0, 1]));
-    });
+    test(
+      'first qualifying session starts a streak and unlocks Party',
+      () async {
+        final o = await session(DateTime(2026, 11, 12, 10));
+        expect(o.dayJustQualified, isTrue);
+        expect(o.streakAfter, 1);
+        expect(o.newSkins.map((s) => s.name), contains('Party'));
+        final p = await repo.load(DateTime(2026, 11, 12, 11));
+        expect(
+          p.auraTotal,
+          30 + o.questAura,
+          reason: 'session aura + any daily-quest reward',
+        );
+        expect(p.sessions, 1);
+        expect(p.streak.doneToday, isTrue);
+        expect(p.unlockedSkins, containsAll([0, 1]));
+      },
+    );
 
     test('two short sessions add up to qualify the day', () async {
       final a = await session(DateTime(2026, 11, 12, 10), minutes: 15);

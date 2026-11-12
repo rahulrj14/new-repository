@@ -56,6 +56,31 @@ class Rearmed extends TrackerEvent {
   const Rearmed(super.at);
 }
 
+// Session-level events (emitted by SessionEngine, not by GraceTracker).
+// They live here because TrackerEvent is sealed.
+
+/// Emitted when you relock in the last few seconds of the grace window.
+class ClutchSave extends TrackerEvent {
+  const ClutchSave(super.at);
+}
+
+/// Emitted at break boundaries and when a pass starts/ends.
+class BreakStarted extends TrackerEvent {
+  const BreakStarted(super.at);
+}
+
+class BreakEnded extends TrackerEvent {
+  const BreakEnded(super.at);
+}
+
+class PassStarted extends TrackerEvent {
+  const PassStarted(super.at);
+}
+
+class PassEnded extends TrackerEvent {
+  const PassEnded(super.at);
+}
+
 class GraceTracker {
   GraceTracker({
     this.grace = const Duration(seconds: 10),
@@ -63,9 +88,9 @@ class GraceTracker {
     bool initiallyActive = true,
     bool initiallyLocked = false,
     bool initiallyCovered = false,
-  })  : _active = initiallyActive,
-        _locked = initiallyLocked,
-        _covered = initiallyCovered;
+  }) : _active = initiallyActive,
+       _locked = initiallyLocked,
+       _covered = initiallyCovered;
 
   final Duration grace;
 
@@ -122,7 +147,8 @@ class GraceTracker {
       _graceSince = null;
       _cracked = true;
       crackCount++;
-      final late = noticedLate || now.difference(deadline) > const Duration(seconds: 2);
+      final late =
+          noticedLate || now.difference(deadline) > const Duration(seconds: 2);
       return [Cracked(deadline, noticedLate: late)];
     }
     return [];

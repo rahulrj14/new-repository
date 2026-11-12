@@ -18,13 +18,23 @@ class AppShell extends ConsumerWidget {
       body: shell,
       bottomNavigationBar: DecoratedBox(
         decoration: const BoxDecoration(
-          boxShadow: [BoxShadow(color: Color(0x14111827), blurRadius: 12, offset: Offset(0, -2))],
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x14111827),
+              blurRadius: 12,
+              offset: Offset(0, -2),
+            ),
+          ],
         ),
         child: NavigationBar(
           selectedIndex: shell.currentIndex,
-          onDestinationSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+          onDestinationSelected: (i) =>
+              shell.goBranch(i, initialLocation: i == shell.currentIndex),
           destinations: [
-            const NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Home'),
+            const NavigationDestination(
+              icon: Icon(Icons.home_rounded),
+              label: 'Home',
+            ),
             NavigationDestination(
               icon: const Icon(Icons.local_fire_department_rounded),
               label: p.streak.days > 0 ? '${p.streak.days} days' : 'Streak',

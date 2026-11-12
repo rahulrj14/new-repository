@@ -15,7 +15,9 @@ const maxFreezes = 2;
 const freezeEvery = 7;
 
 /// Day number in local calendar terms, immune to DST shifts.
-int dayNumber(DateTime local) => DateTime.utc(local.year, local.month, local.day).millisecondsSinceEpoch ~/ 86400000;
+int dayNumber(DateTime local) =>
+    DateTime.utc(local.year, local.month, local.day).millisecondsSinceEpoch ~/
+    86400000;
 
 DateTime dayFromNumber(int n) {
   final u = DateTime.fromMillisecondsSinceEpoch(n * 86400000, isUtc: true);
@@ -23,7 +25,12 @@ DateTime dayFromNumber(int n) {
 }
 
 class StreakState {
-  const StreakState({this.current = 0, this.longest = 0, this.freezes = 0, this.lastDay});
+  const StreakState({
+    this.current = 0,
+    this.longest = 0,
+    this.freezes = 0,
+    this.lastDay,
+  });
   final int current;
   final int longest;
   final int freezes;
@@ -31,12 +38,17 @@ class StreakState {
   /// [dayNumber] of the last qualifying (or frozen) day.
   final int? lastDay;
 
-  StreakState copyWith({int? current, int? longest, int? freezes, int? lastDay}) => StreakState(
-        current: current ?? this.current,
-        longest: longest ?? this.longest,
-        freezes: freezes ?? this.freezes,
-        lastDay: lastDay ?? this.lastDay,
-      );
+  StreakState copyWith({
+    int? current,
+    int? longest,
+    int? freezes,
+    int? lastDay,
+  }) => StreakState(
+    current: current ?? this.current,
+    longest: longest ?? this.longest,
+    freezes: freezes ?? this.freezes,
+    lastDay: lastDay ?? this.lastDay,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -51,7 +63,12 @@ class StreakState {
 }
 
 class StreakUpdate {
-  const StreakUpdate(this.state, {this.freezesUsed = 0, this.earnedFreeze = false, this.reset = false});
+  const StreakUpdate(
+    this.state, {
+    this.freezesUsed = 0,
+    this.earnedFreeze = false,
+    this.reset = false,
+  });
   final StreakState state;
   final int freezesUsed;
   final bool earnedFreeze;
@@ -126,15 +143,39 @@ class StreakView {
 StreakView viewStreak(StreakState s, int today) {
   final last = s.lastDay;
   if (last == null) {
-    return StreakView(days: 0, freezes: s.freezes, doneToday: false, frozenDays: 0, longest: s.longest);
+    return StreakView(
+      days: 0,
+      freezes: s.freezes,
+      doneToday: false,
+      frozenDays: 0,
+      longest: s.longest,
+    );
   }
   final gap = today - last;
   if (gap <= 0) {
-    return StreakView(days: s.current, freezes: s.freezes, doneToday: true, frozenDays: 0, longest: s.longest);
+    return StreakView(
+      days: s.current,
+      freezes: s.freezes,
+      doneToday: true,
+      frozenDays: 0,
+      longest: s.longest,
+    );
   }
   final missed = gap - 1;
   if (missed <= s.freezes) {
-    return StreakView(days: s.current, freezes: s.freezes, doneToday: false, frozenDays: missed, longest: s.longest);
+    return StreakView(
+      days: s.current,
+      freezes: s.freezes,
+      doneToday: false,
+      frozenDays: missed,
+      longest: s.longest,
+    );
   }
-  return StreakView(days: 0, freezes: s.freezes, doneToday: false, frozenDays: 0, longest: s.longest);
+  return StreakView(
+    days: 0,
+    freezes: s.freezes,
+    doneToday: false,
+    frozenDays: 0,
+    longest: s.longest,
+  );
 }

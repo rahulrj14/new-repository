@@ -2,9 +2,12 @@ package app.lockin.lock_in
 
 import android.Manifest
 import android.app.KeyguardManager
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
@@ -15,9 +18,14 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    private var pendingPrepare: MethodChannel.Result? = null
+    private var pendingScan: MethodChannel.Result? = null
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         val messenger = flutterEngine.dartExecutor.binaryMessenger
+        LockInBle.init(this)
+
         EventChannel(messenger, "lockin/device_use/events").setStreamHandler(DeviceEvents)
         MethodChannel(messenger, "lockin/device_use").setMethodCallHandler { call, result ->
             when (call.method) {
@@ -60,6 +68,44 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+
+        EventChannel(messenger, "lockin/ble/events").setStreamHandler(LockInBle)
+        MethodChannel(messenger, "lockin/ble").setMethodCallHandler { call, result ->
+            when (call.method) {
+                "prepare" -> prepareBluetooth(result)
+                "scanQr" -> {
+                    pendingScan?.success(null)
+                    pendingScan = result
+                    @Suppress("DEPRECATION")
+                    startActivityForResult(Intent(this, ScannerActivity::class.java), REQ_SCAN)
+                }
+                "startHost" -> {
+                    LockInBle.startHost(call.argument<ByteArray>("key")!!)
+                    result.success(null)
+                }
+                "startJoin" -> {
+                    LockInBle.startJoin(call.argument<ByteArray>("key")!!)
+                    result.success(null)
+                }
+                "send" -> {
+                    LockInBle.send(call.argument<String>("peer")!!, call.argument<ByteArray>("bytes")!!)
+                    result.success(null)
+                }
+                "stopAdvertising" -> {
+                    LockInBle.stopAdvertising()
+                    result.success(null)
+                }
+                "disconnect" -> {
+                    LockInBle.disconnect(call.argument<String>("peer")!!)
+                    result.success(null)
+                }
+                "stop" -> {
+                    LockInBle.stop()
+                    result.success(null)
+                }
+                else -> result.notImplemented()
+            }
+        }
     }
 
     override fun onResume() {
@@ -71,6 +117,91 @@ class MainActivity : FlutterActivity() {
         DeviceEvents.emit(this, "appInactive")
         super.onPause()
     }
+
+    // ---------------------------------------------------------- bluetooth
+
+    /** The minimum each Android version needs. No location on Android 12+. */
+    private fun blePermissions(): Array<String> = if (Build.VERSION.SDK_INT >= 31) {
+        arrayOf(
+            Manifest.permission.BLUETOOTH_SCAN, // declared neverForLocation
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.BLUETOOTH_ADVERTISE,
+        )
+    } else {
+        // Android 8–11 only allow BLE scanning with this permission. We never
+        // read or store location; it is only how older Android gates scanning.
+        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+    }
+
+    private fun prepareBluetooth(result: MethodChannel.Result) {
+        val adapter = getSystemService(BluetoothManager::class.java)?.adapter
+        if (adapter == null || !packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            result.success("unsupported")
+            return
+        }
+        val missing = blePermissions().filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
+        if (missing.isNotEmpty()) {
+            pendingPrepare = result
+            requestPermissions(missing.toTypedArray(), REQ_BLE)
+            return
+        }
+        finishPrepare(result)
+    }
+
+    private fun finishPrepare(result: MethodChannel.Result) {
+        val adapter = getSystemService(BluetoothManager::class.java)?.adapter
+        if (adapter == null) {
+            result.success("unsupported")
+            return
+        }
+        if (Build.VERSION.SDK_INT < 31) {
+            val lm = getSystemService(LocationManager::class.java)
+            val on = if (Build.VERSION.SDK_INT >= 28) lm.isLocationEnabled else true
+            if (!on) {
+                result.success("location_off")
+                return
+            }
+        }
+        if (!adapter.isEnabled) {
+            pendingPrepare = result
+            @Suppress("DEPRECATION")
+            startActivityForResult(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQ_ENABLE)
+            return
+        }
+        result.success(null)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != REQ_BLE) return
+        val r = pendingPrepare ?: return
+        pendingPrepare = null
+        if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+            finishPrepare(r)
+        } else {
+            r.success("permission_denied")
+        }
+    }
+
+    @Deprecated("Activity result API")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            REQ_ENABLE -> {
+                val r = pendingPrepare ?: return
+                pendingPrepare = null
+                r.success(if (resultCode == RESULT_OK) null else "bluetooth_off")
+            }
+            REQ_SCAN -> {
+                val r = pendingScan ?: return
+                pendingScan = null
+                r.success(if (resultCode == RESULT_OK) data?.getStringExtra(ScannerActivity.EXTRA) else null)
+            }
+        }
+    }
+
+    // --------------------------------------------------------------- misc
 
     private fun snapshot(): Map<String, Any?> {
         val km = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
@@ -87,7 +218,14 @@ class MainActivity : FlutterActivity() {
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
-            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQ_NOTIF)
         }
+    }
+
+    companion object {
+        private const val REQ_NOTIF = 1
+        private const val REQ_BLE = 42
+        private const val REQ_ENABLE = 43
+        private const val REQ_SCAN = 44
     }
 }

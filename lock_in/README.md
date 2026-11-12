@@ -8,25 +8,37 @@ The app has no backend, no account, no analytics, and **no internet permission**
 
 **Look:** light, bright, chat-app feel. Blue headers, white cards, sticker-style blobs with speech bubbles, and Fredoka type. Hike was the inspiration, but the palette, characters and art are all original.
 
-- **Onboarding:** pick a blob (8 original characters), get a random nickname from a fixed word list (🎲 reroll), done.
-- **Tabs:**
-  - **Home:** your blob talking to you, level, streak card with this week, session length, and **Lock in**.
-  - **Streak:** day count, best streak, freezes, a 4-week calendar, and how it works.
-  - **Me:** stats, skins (equip / locked with requirement), change blob, history, settings, and a privacy note.
-- **Session:**
-  - The screen is blue while you're locked in and turns coral when you unlock. Your blob reacts in a speech bubble.
-  - 10 s grace window, then 💥 crack with haptics.
-  - Live countdown in the lock-screen notification.
-- **Results:** aura, minutes, cracks, clean bonus, streak update (including freezes used or earned), new skins (wear in one tap), level progress, and **share**.
-- **Share card:** 1080×1920 story image rendered on the phone, shared through the system share sheet. Nothing is uploaded by the app.
-- **Rules:**
-  - **Aura:** 1 per locked minute, −5 per crack, +10 for a clean full session of 25 minutes or more, daily cap 300.
-  - **Streak:** a day counts once you've locked in 25 minutes. Sessions add up, and there's a 1-minute allowance for the start-up seconds.
-  - **Freezes:** earn one every 7 streak days (hold 2). One is used automatically if you miss a day.
-  - **Skins:** 9, unlocked by level, streak or sessions. Nothing to buy.
-- **Storage:** SQLite (drift) for sessions, daily activity, streak and skins. Profile IDs and settings live in shared preferences. Aura from the first test build is carried over.
+**Solo**
+- **Vibes:** study, dinner, gym, sleep or hangout. Each changes the colours and what your blob says.
+- **Lengths:** 25, 50 or 90 minutes, or open-ended.
+- **Breaks:** optional 25 on, 5 off. Phone use on a break never counts.
+- **Unlocking:** starts a 10 s grace window, then 💥 crack.
+  - **Clutch save:** relock in the last 3 s for +2 aura and a burst animation.
+  - **Emergency pass:** once per session, "I genuinely need my phone" gives 5 minutes with no cracks. It's also a button on the lock-screen notification.
 
-Not yet in this build: Bluetooth group sessions, purchases, Live Activity, iOS.
+**Progress**
+- **Aura and levels.**
+- **Daily quest:** one per day, picked from a fixed list, +15 aura. No reminders, ever.
+- **Streaks:** 25 locked minutes a day, with freezes.
+- **Blob growth:** the blob grows with lifetime locked time (Sprout → Buddy → Glow → Radiant → Legend).
+- **Skins:** 14 in total, including seasonal ones (Diwali, Halloween, New Year, exam season) earned by locking in during the season.
+- **Stickers:** 8 reaction stickers of your own blob, shared as images through the system share sheet.
+- **Lock In Wrapped:** a year-so-far story plus a share card, computed on the phone.
+
+**Squads (Bluetooth, same room)**
+- **Joining:** the host shows a QR code. Friends scan it with Lock In's offline scanner (CameraX + ZXing, no ML Kit), and the host taps ✓ to let each one in.
+- **Options:** length, vibe, breaks, last one standing 👑, and stakes picked from a fixed list ("first crack buys the snacks 🍟").
+- **During a session:** live friend blobs, crack and clutch call-outs, and away detection (60 s out of range = 📡, never "cracked").
+- **Squad bonus:** ×1.5 aura if nobody cracks.
+- **Afterwards:** squad results with the stake outcome, and a squad share card.
+- **Privacy:**
+  - Frames are AES-GCM encrypted with a key that only exists in the QR code.
+  - The advertised Bluetooth id is derived from that key, so it reveals nothing about who is hosting.
+  - There's no pairing, and nothing but catalog IDs and numbers ever crosses the air.
+
+**Storage:** SQLite (drift, schema v2 with migration) for sessions, daily activity, streak and skins. Profile IDs and settings live in shared preferences.
+
+**Not yet:** host handover (if the host leaves, everyone finishes solo), purchases, Live Activity, iOS.
 
 ## Install the test build
 
@@ -45,7 +57,7 @@ Test builds are built with `--dart-define=LOCKIN_DEBUG_TOOLS=true`. They show �
 - **fake lock** and **fake unlock**
 - **+1 min** and **+10 min** time skips
 
-These let you see every state on one phone without waiting. Store builds leave the flag off, so this code isn't compiled in at all.
+These let you see every state on one phone without waiting. In a squad lobby, **🧪 add a fake friend** adds simulated friends that join over an in-memory "radio", speaking the real protocol. During the session, **🧪 friend cracks** and **🧪 friends relock** drive them. Store builds leave the flag off, so this code isn't compiled in at all.
 
 ## Build
 

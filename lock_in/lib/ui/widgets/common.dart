@@ -6,7 +6,13 @@ import '../theme/tokens.dart';
 
 /// White rounded card with a soft shadow.
 class LockCard extends StatelessWidget {
-  const LockCard({super.key, required this.child, this.padding = const EdgeInsets.all(16), this.color, this.onTap});
+  const LockCard({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+    this.color,
+    this.onTap,
+  });
   final Widget child;
   final EdgeInsetsGeometry padding;
   final Color? color;
@@ -16,7 +22,11 @@ class LockCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(LockRadius.card);
     return DecoratedBox(
-      decoration: BoxDecoration(color: color ?? LockColors.card, borderRadius: radius, boxShadow: kCardShadow),
+      decoration: BoxDecoration(
+        color: color ?? LockColors.card,
+        borderRadius: radius,
+        boxShadow: kCardShadow,
+      ),
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
@@ -31,7 +41,13 @@ class LockCard extends StatelessWidget {
 
 /// Chat-style speech bubble with a little tail, like a message from your blob.
 class ChatBubble extends StatelessWidget {
-  const ChatBubble({super.key, required this.text, this.color = Colors.white, this.textColor = LockColors.ink, this.tailLeft = true});
+  const ChatBubble({
+    super.key,
+    required this.text,
+    this.color = Colors.white,
+    this.textColor = LockColors.ink,
+    this.tailLeft = true,
+  });
   final String text;
   final Color color;
   final Color textColor;
@@ -39,7 +55,8 @@ class ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.titleMedium?.copyWith(color: textColor);
+    final style = Theme.of(context).textTheme.titleMedium
+        ?.copyWith(color: textColor);
     return CustomPaint(
       painter: _BubblePainter(color, tailLeft),
       child: Padding(
@@ -57,7 +74,10 @@ class _BubblePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final r = RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height - 8), const Radius.circular(18));
+    final r = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height - 8),
+      const Radius.circular(18),
+    );
     final tx = tailLeft ? size.width * 0.28 : size.width * 0.72;
     final p = Path()
       ..addRRect(r)
@@ -70,12 +90,17 @@ class _BubblePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_BubblePainter old) => old.color != color || old.tailLeft != tailLeft;
+  bool shouldRepaint(_BubblePainter old) =>
+      old.color != color || old.tailLeft != tailLeft;
 }
 
 /// Blue header with a curved bottom edge.
 class BlueHeader extends StatelessWidget {
-  const BlueHeader({super.key, required this.child, this.color = LockColors.blue});
+  const BlueHeader({
+    super.key,
+    required this.child,
+    this.color = LockColors.blue,
+  });
   final Widget child;
   final Color color;
 
@@ -116,10 +141,20 @@ class AuraPill extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('✦', style: TextStyle(color: LockColors.sun, fontSize: 18, fontWeight: FontWeight.w700)),
+            const Text(
+              '✦',
+              style: TextStyle(
+                color: LockColors.sun,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
             const SizedBox(width: 6),
-            Text('$aura',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: onBlue ? Colors.white : LockColors.ink)),
+            Text(
+              '$aura',
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(color: onBlue ? Colors.white : LockColors.ink),
+            ),
           ],
         ),
       ),
@@ -129,7 +164,13 @@ class AuraPill extends StatelessWidget {
 
 /// Chunky progress bar.
 class FatBar extends StatelessWidget {
-  const FatBar({super.key, required this.value, this.color = LockColors.sun, this.track = LockColors.line, this.height = 12});
+  const FatBar({
+    super.key,
+    required this.value,
+    this.color = LockColors.sun,
+    this.track = LockColors.line,
+    this.height = 12,
+  });
   final double value;
   final Color color;
   final Color track;
@@ -144,7 +185,10 @@ class FatBar extends StatelessWidget {
         child: Stack(
           children: [
             Container(color: track),
-            FractionallySizedBox(widthFactor: value.clamp(0.0, 1.0), child: Container(color: color)),
+            FractionallySizedBox(
+              widthFactor: value.clamp(0.0, 1.0),
+              child: Container(color: color),
+            ),
           ],
         ),
       ),
@@ -168,43 +212,62 @@ class WeekStrip extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         for (var i = 0; i < 7; i++)
-          Builder(builder: (context) {
-            final d = monday + i;
-            final row = days[d];
-            final done = row?.qualified ?? false;
-            final frozen = row?.frozen ?? false;
-            final isToday = d == t;
-            final bg = done
-                ? LockColors.blue
-                : frozen
-                    ? LockColors.ice
-                    : LockColors.bg;
-            final label = done ? 'done' : frozen ? 'frozen' : d < t ? 'missed' : 'not yet';
-            return Semantics(
-              label: '${labels[i]}: $label',
-              excludeSemantics: true,
-              child: Column(
-                children: [
-                  Text(labels[i], style: text.bodyMedium?.copyWith(fontWeight: isToday ? FontWeight.w700 : null)),
-                  const SizedBox(height: 6),
-                  Container(
-                    width: 34,
-                    height: 34,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: bg,
-                      shape: BoxShape.circle,
-                      border: isToday && !done ? Border.all(color: LockColors.blue, width: 2) : null,
+          Builder(
+            builder: (context) {
+              final d = monday + i;
+              final row = days[d];
+              final done = row?.qualified ?? false;
+              final frozen = row?.frozen ?? false;
+              final isToday = d == t;
+              final bg = done
+                  ? LockColors.blue
+                  : frozen
+                  ? LockColors.ice
+                  : LockColors.bg;
+              final label = done
+                  ? 'done'
+                  : frozen
+                  ? 'frozen'
+                  : d < t
+                  ? 'missed'
+                  : 'not yet';
+              return Semantics(
+                label: '${labels[i]}: $label',
+                excludeSemantics: true,
+                child: Column(
+                  children: [
+                    Text(
+                      labels[i],
+                      style: text.bodyMedium?.copyWith(
+                        fontWeight: isToday ? FontWeight.w700 : null,
+                      ),
                     ),
-                    child: Text(
-                      done ? '🔥' : frozen ? '❄️' : '',
-                      style: const TextStyle(fontSize: 15),
+                    const SizedBox(height: 6),
+                    Container(
+                      width: 34,
+                      height: 34,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: bg,
+                        shape: BoxShape.circle,
+                        border: isToday && !done
+                            ? Border.all(color: LockColors.blue, width: 2)
+                            : null,
+                      ),
+                      child: Text(
+                        done
+                            ? '🔥'
+                            : frozen
+                            ? '❄️'
+                            : '',
+                        style: const TextStyle(fontSize: 15),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }),
+                  ],
+                ),
+              );
+            },
+          ),
       ],
     );
   }
@@ -212,7 +275,12 @@ class WeekStrip extends StatelessWidget {
 
 /// Big number + small label tile.
 class StatTile extends StatelessWidget {
-  const StatTile({super.key, required this.value, required this.label, this.color = LockColors.ink});
+  const StatTile({
+    super.key,
+    required this.value,
+    required this.label,
+    this.color = LockColors.ink,
+  });
   final String value;
   final String label;
   final Color color;
@@ -228,7 +296,12 @@ class StatTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
           child: Column(
             children: [
-              FittedBox(child: Text(value, style: text.headlineMedium?.copyWith(color: color))),
+              FittedBox(
+                child: Text(
+                  value,
+                  style: text.headlineMedium?.copyWith(color: color),
+                ),
+              ),
               Text(label, style: text.bodyMedium, textAlign: TextAlign.center),
             ],
           ),
