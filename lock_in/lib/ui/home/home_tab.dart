@@ -12,6 +12,7 @@ import '../../progression/streaks.dart';
 import '../../session/session_controller.dart';
 import '../../storage/profile_store.dart';
 import '../../storage/progress_repo.dart';
+import '../keepalive/keep_alive_screen.dart';
 import '../theme/tokens.dart';
 import '../widgets/blob_avatar.dart';
 import '../widgets/common.dart';
@@ -135,7 +136,7 @@ class _HomeTabState extends ConsumerState<HomeTab> {
               if (!_dismissedWarning && (interrupted || batteryRisk)) ...[
                 _Warning(
                   interrupted: interrupted,
-                  onFix: () => ref.read(deviceBridgeProvider).openAppSettings(),
+                  onFix: () => context.push('/keep-alive'),
                   onClose: () => setState(() => _dismissedWarning = true),
                 ),
                 const SizedBox(height: 12),
@@ -187,6 +188,21 @@ class _HomeTabState extends ConsumerState<HomeTab> {
                 style: FilledButton.styleFrom(backgroundColor: _vibe.color),
                 onPressed: () async {
                   HapticFeedback.mediumImpact();
+                  // First session on a phone known to kill background apps:
+                  // offer the 1-minute fix once (never nags again).
+                  final prefs = ref.read(prefsProvider);
+                  if (!(prefs.getBool(keepAliveDoneKey) ?? false) &&
+                      needsKeepAlive(info)) {
+                    await prefs.setBool(keepAliveDoneKey, true);
+                    if (!context.mounted) return;
+                    final fix = await _askKeepAlive(context);
+                    if (!context.mounted) return;
+                    if (fix == true) {
+                      await context.push('/keep-alive');
+                      return;
+                    }
+                    if (fix == null) return;
+                  }
                   await ref
                       .read(sessionProvider.notifier)
                       .start(
@@ -216,6 +232,42 @@ class _HomeTabState extends ConsumerState<HomeTab> {
           ),
         ),
       ],
+    );
+  }
+
+  /// true = fix now, false = start anyway, null = dismissed.
+  Future<bool?> _askKeepAlive(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return showModalBottomSheet<bool>(
+      context: context,
+      builder: (sheet) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('one quick thing 😴', style: text.headlineMedium),
+              const SizedBox(height: 4),
+              Text(
+                "some phones put apps to sleep while they're locked, which cuts your session off. "
+                'a 1-minute fix stops that.',
+                style: text.bodyLarge,
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () => Navigator.pop(sheet, true),
+                child: const Text('fix it now'),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(sheet, false),
+                child: const Text('start anyway'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

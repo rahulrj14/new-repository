@@ -55,6 +55,25 @@ class DeviceBridge {
       _call('stopSession', {'doneTitle': doneTitle, 'doneText': doneText});
   Future<void> openAppSettings() => _call('openAppSettings');
 
+  /// Hands a web link to the browser/Play Store app (the app itself has no
+  /// internet access).
+  Future<void> openUrl(String url) => _call('openUrl', {'url': url});
+
+  /// Phone-maker "autostart"/background screen if one exists; otherwise the
+  /// app's own settings page. Returns what was opened.
+  Future<String?> openAutostart() async {
+    try {
+      return await _methods.invokeMethod<String>('openAutostart');
+    } on MissingPluginException {
+      return null;
+    } on PlatformException {
+      return null;
+    }
+  }
+
+  /// Android's "battery optimisation" list.
+  Future<void> openBatteryList() => _call('openBatteryList');
+
   Future<Map<String, Object?>> snapshot() async {
     try {
       return Map<String, Object?>.from(

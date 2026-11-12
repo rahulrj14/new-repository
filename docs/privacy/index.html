@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lock In privacy policy</title>
+<meta name="description" content="Lock In collects no personal data. Everything stays on your phone.">
+<style>
+  :root { --bg:#f2f4fa; --card:#fff; --ink:#111827; --muted:#6b7280; --blue:#2c6bff; --line:#e5e8f0; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg:#0e1220; --card:#171c2e; --ink:#eef1f8; --muted:#a3abbd; --blue:#7aa2ff; --line:#262c42; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 2rem; margin: 0 0 4px; }
+  h2 { font-size: 1.2rem; margin: 32px 0 8px; }
+  .muted { color: var(--muted); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px 20px; margin: 16px 0; }
+  .big { font-size: 1.15rem; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { text-align: left; vertical-align: top; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  th { font-weight: 600; }
+  a { color: var(--blue); }
+  code { background: var(--line); padding: 1px 6px; border-radius: 6px; font-size: .92em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Lock In privacy policy</h1>
+  <p class="muted">Effective 12 November 2026 · App: Lock In (Android, <code>app.lockin.android</code>)</p>
+
+  <div class="card big">
+    Lock In collects <strong>no personal data</strong>. It has no account, no ads, no analytics and no tracking,
+    and the app has <strong>no internet access</strong>. Everything stays on your phone.
+  </div>
+
+  <h2>What stays on your phone</h2>
+  <p>Your blob, skin and nickname (chosen from a fixed list), your sessions, aura, streaks, quests, skins and stickers.
+     These are stored in the app's private storage on your device. We never receive them. Uninstalling the app deletes them.
+     Cloud backup is switched off, so they are not copied to Google Drive. A direct phone-to-phone transfer, for example when you set up a new phone, can move them.</p>
+
+  <h2>Squads (friends in the same room)</h2>
+  <p>When you lock in with friends, nearby phones talk to each other over Bluetooth. The messages contain only
+     preset IDs and numbers: which blob, nickname and skin you picked from the app's fixed lists, your session status
+     (for example "locked" or "cracked") and counters (for example minutes and cracks). There is no chat, no free text,
+     no photos and no contact details.</p>
+  <ul>
+    <li>Joining needs the host's QR code, scanned in person, and the host's approval.</li>
+    <li>Messages are encrypted. Only phones that scanned that session's code can read them.</li>
+    <li>These messages go directly between phones. They never reach us or any server.</li>
+  </ul>
+
+  <h2>Permissions and why</h2>
+  <table>
+    <tr><th>Permission</th><th>Why</th></tr>
+    <tr><td>Notifications</td><td>Shows the "Locked in" notification and timer while a session you started is running.</td></tr>
+    <tr><td>Foreground service</td><td>Keeps your session running while your phone is locked, so the app can notice an unlock.</td></tr>
+    <tr><td>Nearby devices (Bluetooth)</td><td>Finds and connects to friends' phones in the same room for squads. Not used for location.</td></tr>
+    <tr><td>Location (Android 8–11 only)</td><td>Those Android versions only allow Bluetooth scanning if this permission is granted. Lock In asks only when you start or join a squad, and never reads, stores or sends your location. Android 12 and later don't need it.</td></tr>
+    <tr><td>Camera</td><td>Scans a friend's join code. Images are processed in memory and never saved or sent.</td></tr>
+    <tr><td>Wake lock</td><td>Keeps squad updates flowing while phones are locked.</td></tr>
+  </table>
+
+  <h2>Sharing</h2>
+  <p>If you tap share on a card or sticker, Lock In makes an image on your phone and opens Android's share sheet.
+     What happens next is up to you and the app you choose.</p>
+
+  <h2>Feedback</h2>
+  <p>The "send feedback" link opens a web form in your browser. Anything you type there goes to that form, not through the app.
+     Please don't include personal details you don't want to share.</p>
+
+  <h2>Crash reports</h2>
+  <p>Lock In includes no crash-reporting or analytics code. Google Play may show us anonymous crash and
+     "app not responding" statistics that Android collects under your own device settings.</p>
+
+  <h2>Teens</h2>
+  <p>Lock In is for ages 13 and up. It follows the UK Age Appropriate Design Code: private by default, no profiling,
+     no ads, no contact with strangers, and no nudges designed to keep you on your phone.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy ever changes, the new version will be posted here with a new effective date before the change ships.</p>
+
+  <h2>Contact</h2>
+  <p>Questions: <strong>[your contact email]</strong></p>
+</main>
+</body>
+</html>

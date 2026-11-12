@@ -243,7 +243,7 @@ class ShareCard extends StatelessWidget {
           Text(nickname, style: _t(20)),
           const SizedBox(height: 4),
           Text(
-            'phone down. aura up.',
+            'phone down. aura up. · free on Google Play',
             style: _t(15, color: Colors.white70, w: FontWeight.w500),
           ),
         ],
@@ -323,14 +323,14 @@ class SquadCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _chip('🫶 $n friends'),
+              _chip('👥 $n of us'),
               _chip('${result.vibe.emoji} $mins min'),
               _chip(cracks == 0 ? '💎 0 cracks' : '💔 $cracks total'),
             ],
           ),
           const Spacer(),
           Text(
-            'phone down. aura up.',
+            'phone down. aura up. · free on Google Play',
             style: _t(15, color: Colors.white70, w: FontWeight.w500),
           ),
         ],

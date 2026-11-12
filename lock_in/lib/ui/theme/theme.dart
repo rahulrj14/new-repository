@@ -18,6 +18,9 @@ ThemeData buildTheme() {
     colorScheme: scheme,
     useMaterial3: true,
     fontFamily: kFont,
+    // Emoji come from the system font on phones; named here so tools that
+    // render screens off-device (store screenshots) can supply one.
+    fontFamilyFallback: const ['Noto Color Emoji', 'DejaVu Sans'],
     scaffoldBackgroundColor: LockColors.bg,
   );
   TextStyle t(
@@ -27,6 +30,7 @@ ThemeData buildTheme() {
     Color color = LockColors.ink,
   }) => TextStyle(
     fontFamily: kFont,
+    fontFamilyFallback: const ['Noto Color Emoji', 'DejaVu Sans'],
     fontSize: size,
     fontWeight: w,
     height: height,

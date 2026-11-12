@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'storage/profile_store.dart';
 import 'ui/home/home_tab.dart';
+import 'ui/keepalive/keep_alive_screen.dart';
 import 'ui/me/me_tab.dart';
 import 'ui/onboarding/onboarding_screen.dart';
 import 'ui/results/results_screen.dart';
@@ -51,6 +52,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/squad/host', builder: (_, _) => const HostScreen()),
       GoRoute(path: '/squad/join', builder: (_, _) => const JoinScreen()),
       GoRoute(path: '/wrapped', builder: (_, _) => const WrappedScreen()),
+      GoRoute(path: '/keep-alive', builder: (_, _) => const KeepAliveScreen()),
     ],
   );
 });

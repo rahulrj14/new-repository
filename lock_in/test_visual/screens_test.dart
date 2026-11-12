@@ -63,7 +63,9 @@ void main() {
     final m = tester.binding.defaultBinaryMessenger;
     m.setMockMethodCallHandler(
       const MethodChannel('lockin/device_use'),
-      (call) async => null,
+      (call) async => call.method == 'snapshot'
+          ? {'manufacturer': 'Xiaomi', 'batteryOptimized': true, 'platform': 'android'}
+          : null,
     );
     m.setMockStreamHandler(
       const EventChannel('lockin/device_use/events'),
@@ -286,6 +288,22 @@ void main() {
       }
     }
     await shot(tester, '26-wrapped-card');
+    await teardown(tester, db);
+  });
+
+  testWidgets('keep alive + get-the-app QR', (tester) async {
+    final (c, db) = await boot(tester);
+    c.read(routerProvider).push('/keep-alive');
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+    await shot(tester, '27-keep-alive-xiaomi');
+    c.read(routerProvider).go('/');
+    await tester.pump(const Duration(milliseconds: 300));
+    c.read(routerProvider).push('/squad/host');
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('get the app'));
+    await shot(tester, '28-lobby-get-app');
     await teardown(tester, db);
   });
 }

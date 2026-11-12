@@ -65,6 +65,23 @@ class MainActivity : FlutterActivity() {
                     result.success(true)
                 }
                 "snapshot" -> result.success(snapshot())
+                "openUrl" -> {
+                    try {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(call.argument<String>("url"))))
+                    } catch (_: Exception) {
+                        // No browser: nothing to do.
+                    }
+                    result.success(null)
+                }
+                "openAutostart" -> result.success(openAutostart())
+                "openBatteryList" -> {
+                    try {
+                        startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                    } catch (_: Exception) {
+                        openAppDetails()
+                    }
+                    result.success(null)
+                }
                 else -> result.notImplemented()
             }
         }
@@ -199,6 +216,38 @@ class MainActivity : FlutterActivity() {
                 r.success(if (resultCode == RESULT_OK) data?.getStringExtra(ScannerActivity.EXTRA) else null)
             }
         }
+    }
+
+    // --------------------------------------------------------- keep alive
+
+    /** Known phone-maker screens that stop background apps being killed. */
+    private val autostartScreens = listOf(
+        "com.miui.securitycenter" to "com.miui.permcenter.autostart.AutoStartManagementActivity",
+        "com.coloros.safecenter" to "com.coloros.safecenter.permission.startup.StartupAppListActivity",
+        "com.oplus.safecenter" to "com.oplus.safecenter.startupapp.StartupAppListActivity",
+        "com.vivo.permissionmanager" to "com.vivo.permissionmanager.activity.BgStartUpManagerActivity",
+        "com.iqoo.secure" to "com.iqoo.secure.ui.phoneoptimize.BgStartUpManager",
+        "com.huawei.systemmanager" to "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity",
+        "com.samsung.android.lool" to "com.samsung.android.sm.battery.ui.BatteryActivity",
+    )
+
+    private fun openAutostart(): String {
+        for ((pkg, cls) in autostartScreens) {
+            try {
+                startActivity(Intent().setComponent(android.content.ComponentName(pkg, cls)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                return "autostart"
+            } catch (_: Exception) {
+                // Not this phone maker; try the next.
+            }
+        }
+        openAppDetails()
+        return "app_settings"
+    }
+
+    private fun openAppDetails() {
+        startActivity(
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).setData(Uri.fromParts("package", packageName, null)),
+        )
     }
 
     // --------------------------------------------------------------- misc

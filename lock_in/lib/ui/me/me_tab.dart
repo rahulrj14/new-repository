@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../catalog/avatars.dart';
+import '../../config.dart';
 import '../../catalog/nicknames.dart';
 import '../../catalog/skins.dart';
 import '../../catalog/stickers.dart';
@@ -201,12 +202,21 @@ class _MeTabState extends ConsumerState<MeTab> {
                           child: GestureDetector(
                             onTap: () {
                               if (got) {
-                                _shareSticker(context, st, profile.avatarId, profile.skinId);
+                                _shareSticker(
+                                  context,
+                                  st,
+                                  profile.avatarId,
+                                  profile.skinId,
+                                );
                               } else {
                                 ScaffoldMessenger.of(context)
                                   ..hideCurrentSnackBar()
                                   ..showSnackBar(
-                                    SnackBar(content: Text('🔒 ${st.label}: ${st.requirement}')),
+                                    SnackBar(
+                                      content: Text(
+                                        '🔒 ${st.label}: ${st.requirement}',
+                                      ),
+                                    ),
                                   );
                               }
                             },
@@ -327,16 +337,43 @@ class _MeTabState extends ConsumerState<MeTab> {
                         style: text.titleMedium,
                       ),
                       subtitle: Text(
-                        'battery saver → no restrictions (Xiaomi, Samsung, OnePlus)',
+                        'stop your phone from cutting sessions off',
                         style: text.bodyMedium,
                       ),
                       trailing: const Icon(
                         Icons.chevron_right_rounded,
                         color: LockColors.muted,
                       ),
-                      onTap: () =>
-                          ref.read(deviceBridgeProvider).openAppSettings(),
+                      onTap: () => context.push('/keep-alive'),
                     ),
+                    if (kFeedbackUrl.isNotEmpty)
+                      ListTile(
+                        title: Text(
+                          'send feedback 💬',
+                          style: text.titleMedium,
+                        ),
+                        subtitle: Text(
+                          'opens a short form in your browser',
+                          style: text.bodyMedium,
+                        ),
+                        trailing: const Icon(
+                          Icons.open_in_new_rounded,
+                          color: LockColors.muted,
+                        ),
+                        onTap: () => ref
+                            .read(deviceBridgeProvider)
+                            .openUrl(kFeedbackUrl),
+                      ),
+                    if (kPrivacyUrl.isNotEmpty)
+                      ListTile(
+                        title: Text('privacy policy', style: text.titleMedium),
+                        trailing: const Icon(
+                          Icons.open_in_new_rounded,
+                          color: LockColors.muted,
+                        ),
+                        onTap: () =>
+                            ref.read(deviceBridgeProvider).openUrl(kPrivacyUrl),
+                      ),
                   ],
                 ),
               ),

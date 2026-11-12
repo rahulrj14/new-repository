@@ -24,6 +24,7 @@ class HostScreen extends ConsumerStatefulWidget {
 class _HostScreenState extends ConsumerState<HostScreen> {
   String? _error;
   bool _starting = true;
+  bool _showGetApp = false;
 
   @override
   void initState() {
@@ -103,8 +104,15 @@ class _HostScreenState extends ConsumerState<HostScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
+                    _QrToggle(
+                      getApp: _showGetApp,
+                      onChanged: (v) => setState(() => _showGetApp = v),
+                    ),
+                    const SizedBox(height: 10),
                     Semantics(
-                      label: 'Join code. Friends scan this with Lock In.',
+                      label: _showGetApp
+                          ? 'Play Store code. Friends without Lock In scan this with their camera.'
+                          : 'Join code. Friends scan this with Lock In.',
                       child: Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
@@ -112,22 +120,31 @@ class _HostScreenState extends ConsumerState<HostScreen> {
                           borderRadius: BorderRadius.circular(LockRadius.card),
                         ),
                         child: QrImageView(
-                          data: v.code.encode(),
+                          // The join code never goes into the store link:
+                          // opening a URL would hand the session key to others.
+                          data: _showGetApp ? kPlayUrl : v.code.encode(),
                           size: 210,
-                          eyeStyle: const QrEyeStyle(
+                          eyeStyle: QrEyeStyle(
                             eyeShape: QrEyeShape.circle,
-                            color: LockColors.ink,
+                            color: _showGetApp
+                                ? LockColors.blue
+                                : LockColors.ink,
                           ),
-                          dataModuleStyle: const QrDataModuleStyle(
+                          dataModuleStyle: QrDataModuleStyle(
                             dataModuleShape: QrDataModuleShape.circle,
-                            color: LockColors.ink,
+                            color: _showGetApp
+                                ? LockColors.blue
+                                : LockColors.ink,
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'friends: Lock In → with friends → join',
+                      _showGetApp
+                          ? 'no Lock In yet? scan with the camera → Play Store'
+                          : 'friends: Lock In → with friends → join',
+                      textAlign: TextAlign.center,
                       style: text.bodyLarge?.copyWith(
                         color: Colors.white.withValues(alpha: 0.9),
                       ),
@@ -297,6 +314,56 @@ class _HostScreenState extends ConsumerState<HostScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _QrToggle extends StatelessWidget {
+  const _QrToggle({required this.getApp, required this.onChanged});
+  final bool getApp;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget seg(String label, bool value) {
+      final on = getApp == value;
+      return Expanded(
+        child: Semantics(
+          button: true,
+          selected: on,
+          child: GestureDetector(
+            onTap: () => onChanged(value),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              height: 40,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: on ? Colors.white : Colors.transparent,
+                borderRadius: BorderRadius.circular(LockRadius.pill),
+              ),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: kFont,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  color: on ? LockColors.blue : Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: 280,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(LockRadius.pill),
+      ),
+      child: Row(children: [seg('join code', false), seg('get the app', true)]),
     );
   }
 }

@@ -59,6 +59,14 @@ Test builds are built with `--dart-define=LOCKIN_DEBUG_TOOLS=true`. They show �
 
 These let you see every state on one phone without waiting. In a squad lobby, **🧪 add a fake friend** adds simulated friends that join over an in-memory "radio", speaking the real protocol. During the session, **🧪 friend cracks** and **🧪 friends relock** drive them. Store builds leave the flag off, so this code isn't compiled in at all.
 
+## Release (Google Play)
+- **Package:** `app.lockin.android`, version in `pubspec.yaml` (`0.9.0+1`). Bump the `+N` for every upload.
+- **Play build:** `flutter build appbundle --release` gives `build/app/outputs/bundle/release/app-release.aab`. It's signed with the upload key from `android/key.properties`, which is gitignored; see `docs/play-store/LISTING.md`. Without that file, release builds fall back to the debug key.
+- **Store assets:** `flutter test tool/store_assets_test.dart` (icons, feature graphic) and `flutter test tool/store_screenshots_test.dart` (1080×1920 screenshots) write to `docs/play-store/`.
+- **Policy pages:** `docs/play-store/DATA_SAFETY.md` and the privacy policy in `docs/privacy/`.
+- **Feedback and privacy links:** set `kFeedbackUrl` / `kPrivacyUrl` in `lib/config.dart`. Empty means the link is hidden.
+- **Backup:** cloud backup is off; direct phone-to-phone transfer is allowed (`res/xml/data_extraction_rules.xml`).
+
 ## Build
 
 ```sh

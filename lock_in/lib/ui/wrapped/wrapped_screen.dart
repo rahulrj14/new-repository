@@ -297,7 +297,7 @@ class _WrappedCard extends StatelessWidget {
           const Spacer(),
           Text(nickname, style: t(20)),
           Text(
-            'phone down. aura up.',
+            'phone down. aura up. · free on Google Play',
             style: t(14, c: Colors.white70, wt: FontWeight.w500),
           ),
         ],
